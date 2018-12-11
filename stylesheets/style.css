@@ -1,0 +1,584 @@
+
+@font-face {
+  font-family: KmHrFont;
+  src: url(../fonts/advanced_pixel_lcd-7.ttf);
+}
+
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.clearfix:before, .clearfix:after
+{
+    content: " ";
+    display: table;
+}
+.clearfix:after
+{
+    clear: both;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: "Microsoft JhengHei", Helvetica, Arial, sans-serif;
+  font-size: 19px;
+  line-height: 150%;
+  padding: 0px;
+  margin: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+
+.unselectable {
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  /*
+    Introduced in IE 10.
+    See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+  */
+  -ms-user-select: none;
+  user-select: none;
+}
+
+#canvas-div {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+a
+{
+	color: inherit;
+	text-decoration: none;
+}
+
+h1
+{
+    font-size: 50px;
+    line-height: 160%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+h2
+{
+    font-size: 45px;
+    line-height: 160%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+h3
+{
+    font-size: 35px;
+    line-height: 160%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+h4
+{
+    font-size: 30px;
+    line-height: 160%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+h5
+{
+    font-size: 25px;
+    line-height: 160%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.dialog
+{
+    display: none;
+	position: absolute;
+	z-index: 100;
+	top: 50%;
+	left: 50%;
+	padding: 20px;
+	background-color: rgba(0,0,0,0.85);
+    border: 5px solid #FFF;
+    color: #FFF;
+    text-align: center;
+    font-size: 21px;
+    line-height: 150%;
+	transform:translateX(-50%) translateY(-50%);
+}
+.dialog .button
+{
+	display: inline-block;
+    border: 2px solid #FFF;
+    padding: 5px 20px;
+    cursor: pointer;
+}
+.dialog .button:hover
+{
+    background: #FFF;
+    color: #000;
+}
+
+#env-setting-button
+{
+    position: absolute;
+    z-index: 999998;
+    bottom: 0;
+    left: 0;
+    padding: 10px;
+    background-color: rgba(255,255,255,0.1);
+    cursor: pointer;
+}
+#env-setting-button svg
+{
+    display: block;
+    width: 20px;
+}
+#env-setting-button svg path
+{
+    fill: white;
+}
+#env-setting-button:hover
+{
+    background-color: #FFF;
+}
+#env-setting-button:hover svg path
+{
+    fill: #000;
+}
+
+#keyboard-setting-button
+{
+    position: absolute;
+    z-index: 999998;
+    bottom: 0;
+    left: 40px;
+    padding: 5px;
+    background-color: rgba(255,255,255,0.1);
+    cursor: pointer;
+}
+#keyboard-setting-button svg
+{
+    display: block;
+    width: 30px;
+}
+#keyboard-setting-button svg path
+{
+    fill: white;
+}
+#keyboard-setting-button:hover
+{
+    background-color: #FFF;
+}
+#keyboard-setting-button:hover svg path
+{
+    fill: #000;
+}
+
+.env-setting-dialog .row
+{
+    width: 600px;
+    margin-bottom: 10px;
+}
+.env-setting-dialog .left
+{
+    float: left;
+    width: 200px;
+}
+.env-setting-dialog .right
+{
+    float: left;
+    width: 400px;
+    text-align: left;
+}
+.env-setting-dialog .right .item
+{
+    display: inline-block;
+    border: 1px solid #FFF;
+    padding: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+.env-setting-dialog .right .item.selected
+{
+    background-color: rgba(255,255,255,0.85);
+    color: #000;
+} 
+
+.keyboard-setting-dialog
+{
+    width: 600px;
+    height: 60%;
+    padding-bottom: 70px;
+}
+.keyboard-setting-dialog .scroll
+{
+    height: 100%;
+    margin-bottom: 10px;
+    overflow: scroll;
+    overflow-x: hidden;
+}
+.keyboard-setting-dialog .row
+{
+    margin-bottom: 10px;
+}
+.keyboard-setting-dialog .left
+{
+    float: left;
+    width: 45%;
+}
+.keyboard-setting-dialog .right
+{
+    float: left;
+    width: 55%;
+}
+
+#loading-div
+{
+    position: absolute;
+    z-index: 999999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    color: #FFF;
+}
+#loading-div .info
+{
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    width: 100%;
+}
+#loading-div .info .box
+{
+    width: 300px;
+    margin: 0 auto;
+}
+#loading-div .info .text
+{
+    font-size: 15px;
+    text-align: center;
+}
+#loading-div .info .bar
+{
+    position: relative;
+    width: 100%;
+    height: 5px;
+    border: 1px solid rgba(255,255,255,0.7);
+}
+#loading-div .info .bar .s
+{
+    position: absolute;
+    z-index: 1;
+    width: 0%;
+    height: 100%;
+    background: #FFF;
+    /*transition: width 0.1s;*/
+}
+#loading-div .alert
+{
+    position: absolute;
+    z-index: 1;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    font-size: 12px;
+    line-height: 130%;
+    text-align: center;
+}
+
+#debug-object-state-div
+{
+    font-size: 9px;
+    line-height: 120%;
+}
+
+#hud-canvas-div
+{
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    width:100%;
+    height:100%;
+}
+
+#score-check
+{
+    display: none;
+    position: absolute;
+    z-index: 99;
+    top: 50%;
+    left: 15%;
+    width: 70%;
+    background-color: rgba(0,0,0,0.85);
+    border: 5px solid #FFF;
+    color: #FFF;
+    text-align: center;
+    font-size: 21px;
+    line-height: 150%;
+    transform:translateY(-50%);
+}
+
+#score-check .score-type
+{
+    margin-bottom: 30px;
+}
+#score-check .score-type .item
+{
+    display: inline-block;
+    width: 20%;
+}
+#score-check .score-type .item h5
+{
+	font-size: 20px;
+}
+#score-check .camera-score
+{
+	margin-bottom: 30px;
+}
+#score-check .camera-score .item
+{
+	display: inline-block;
+    width: 15%;
+}
+#score-check .camera-score .item h5
+{
+	font-size: 20px;
+}
+
+#score-check .score-total
+{
+    margin-bottom: 30px;
+}
+#score-check .score-total .score
+{
+    font-size: 45px;
+}
+#score-check .button-div
+{
+    margin-bottom: 30px;
+}
+#score-check .button-div .button
+{
+    display: inline-block;
+    border: 2px solid #FFF;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+#score-check .button-div .button:hover
+{
+    background: #FFF;
+    color: #000;
+}
+
+#hud
+{
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#hud .game-state
+{
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 50%;
+    margin-left:-200px;
+    width: 400px;
+    height: 50px;
+}
+#hud .game-state .drive-percent
+{
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: rgba(255,255,255,0.5);
+}
+#hud .game-state .drive-percent .bar
+{
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: #FFF;
+}
+#hud .game-state .drive-percent .bar .text
+{
+    position: absolute;
+    z-index: 1;
+    bottom: 10px;
+    right: -20px;
+    color: #FFF;
+    font-size: 10px;
+    font-family: KmHrFont;
+}
+#hud .game-state .camera-position
+{
+    position: absolute;
+    z-index: 1;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+}
+#hud .game-state .camera-position .item
+{
+    position: absolute;
+    z-index: 2;
+    bottom: 0;
+    left: 0;
+    margin-left: -10px;
+    width: 20px;
+    height: 20px;
+    background-image: url(../textures/SafetyCameraLogo.png);
+    background-size: contain;
+    opacity: 1;
+}
+
+#hud .game-state .camera-position .item.item-1 { left: 20%; }
+#hud .game-state .camera-position .item.item-2 { left: 40%; }
+#hud .game-state .camera-position .item.item-3 { left: 60%; }
+#hud .game-state .camera-position .item.item-4 { left: 80%; }
+#hud .game-state .camera-position .item.item-5 { left: 100%; }
+
+#hud .score-state
+{
+    position: absolute;
+    z-index: 1;
+    top: 70px;
+    left: 50%;
+    margin-left: -50%;
+    width: 100%;
+    color: #FFF;
+    text-align: center;
+    font-size: 20px;
+    line-height: 120%;
+}
+
+#hud .score-state .total
+{
+    font-size: 50px;
+    line-height: 100%;
+    margin-bottom: 20px;
+}
+
+#hud .score-state .type
+{
+    position: absolute;
+    z-index: 1;
+    top: 70px;
+    left: 0;
+    width: 100%;
+}
+#hud .score-state .type .item
+{
+    display: none;
+    padding: 0 20px;
+}
+#hud .score-state .SpeedBonus
+{
+    position: absolute;
+    z-index: 1;
+    top: 135px;
+    left: 0;
+    width: 100%;
+}
+#hud .score-state .SafetyCamera
+{
+    position: absolute;
+    z-index: 1;
+    top: 200px;
+    left: 0;
+    width: 100%;
+}
+#hud .score-state .SafetyCamera .item
+{
+    display: none;
+    padding: 0 20px;
+}
+
+#hud .engine
+{
+    position: absolute;
+    z-index: 1;
+    bottom: 0px;
+    right: 30px;
+    width: 200px;
+    height: 200px;
+}
+#hud .engine .text
+{
+    position: absolute;
+    z-index: 2;
+    font-size: 9px;
+    line-height:100%;
+    font-family: KmHrFont;
+    color: #FFF;
+    opacity: 0.5;
+    transform: scale(0.7,0.7);
+}
+#hud .engine .text.rpm {top: -11px; right: -10px; }
+#hud .engine .text.n2o {top: 23px; right: -20px; }
+#hud .engine .text.gear {top: 51px; right: -20px; }
+#hud .engine .text.speed {bottom: 25px; right: -20px; }
+
+#hud .engine svg
+{
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+}
+#hud .engine svg
+{
+    transform: scale(-1.33,1.33);
+}
+#hud #speed
+{
+    position: absolute;
+    z-index: 1;
+    bottom: 40px;
+    right: 20px;
+    color: #FFF;
+    font-size: 21px;
+    line-height: 100%;
+    opacity: 0.8;
+}
+#hud #speed .km
+{
+    font-size: 30px;
+    font-family: KmHrFont;
+}
+
+#SafetyCameraFlash
+{
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+0,ffffff+100&0+0,0.9+100 */
+    background: -moz-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(left, rgba(255,255,255,0) 0%,rgba(255,255,255,0.9) 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%,rgba(255,255,255,0.9) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#e6ffffff',GradientType=1 ); /* IE6-9 */
+}
