@@ -46,7 +46,7 @@ function Streetlight(iConfig)
     var material = new THREE.MeshBasicMaterial( {color: 0x666666, side: THREE.DoubleSide} );
     var horizontalCylinderL2 = new THREE.Mesh( geometry, material );
     horizontalCylinderL2.rotation.x=90*Math.PI/180;
-    horizontalCylinderL2.rotation.y=45*Math.PI/180;
+    horizontalCylinderL2.rotation.y=90*Math.PI/180;
     horizontalCylinderL2.position.y=-1.5;
     horizontalCylinderL2.position.z=9;
     this.L2MeshGroup.add(horizontalCylinderL2);

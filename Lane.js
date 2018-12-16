@@ -40,7 +40,7 @@ function Lane(iConfig)
     this.PutCar=function(){
 
     	CanPutCarTime=0;
-    	CanPutCarTimeMax=Config.TargetSpeed/3.6*2 + Rand(60);
+    	CanPutCarTimeMax=Config.TargetSpeed/3.6*3 + Rand(60);
     	this.CanPutCar=false;
     };
 
@@ -54,7 +54,7 @@ function Lane(iConfig)
     this.Run=function(){
 
     	if(!this.CanPutCar)
-    		CanPutCarTime+=(Math.abs(-SystemRelativePosition.x + this.TargetSpeed/60/3.6)*0.5+UserMileagePer*0.5) * SystemStepPer;
+    		CanPutCarTime+=(Math.abs(-SystemRelativePosition.x + this.TargetSpeed/60/3.6)*0.75+UserMileagePer*0.25) * SystemStepPer;
     	
     	if(CanPutCarTime>CanPutCarTimeMax)
     		this.CanPutCar=true;

@@ -1,6 +1,8 @@
 function TruckContainer(iConfig)
 {
     var Config={
+        Scene:Scene,
+        World:world,
         CanReset:true,
         Mass:30000,
         EngineForce:18000*2,
@@ -98,13 +100,22 @@ function TruckContainer(iConfig)
     this.Truck=null;            //連結的卡車
     this.BodySize=new CANNON.Vec3(12.2+2,2.5,10);
 
-    //貨櫃
+    //L1貨櫃
     var CarModelL1Group=new THREE.Group();
+    var CarModelL2Group=new THREE.Group();
     var geometry = new THREE.BoxBufferGeometry(12.2,2.43,2.9);
 	var material = new THREE.MeshLambertMaterial( {color: 0xDDDDDD} );
-    var ContainerBodyCube = new THREE.Mesh( geometry, material );
-    ContainerBodyCube.position.z=2.9/2;
-    CarModelL1Group.add(ContainerBodyCube);
+    var ContainerL1BodyCube = new THREE.Mesh( geometry, material );
+    ContainerL1BodyCube.position.z=2.9/2;
+    CarModelL1Group.add(ContainerL1BodyCube);
+
+    //L2貨櫃
+    var CarModelL2Group=new THREE.Group();
+    var geometry = new THREE.BoxBufferGeometry(12.2,2.43,2.9);
+	var material = new THREE.MeshLambertMaterial( {color: 0xDDDDDD} );
+    var ContainerL2BodyCube = new THREE.Mesh( geometry, material );
+    ContainerL2BodyCube.position.z=2.9/2;
+    CarModelL2Group.add(ContainerL2BodyCube);
 
     //尾端燈號箱
     var geometry = new THREE.BoxBufferGeometry(0.3,2.43,0.75);
@@ -114,6 +125,7 @@ function TruckContainer(iConfig)
     CarModelL1Group.add(LightBox);
 
     this.LOD.addLevel(CarModelL1Group,0);
+    this.LOD.addLevel(CarModelL2Group,300);
 
     this.Body.addShape(new CANNON.Box(new CANNON.Vec3(12.2/2,2.43/2,2.9/2)),new CANNON.Vec3(0,0,2.9/2));
     this.Body.addShape(new CANNON.Box(new CANNON.Vec3(0.3/2,2.43/2,0.75/2)),new CANNON.Vec3(6.1-0.3/2,0,-0.75/2));
@@ -178,14 +190,14 @@ function TruckContainer(iConfig)
 
 
     //移除Body
-    world.removeBody(this.Body);
+    Config.World.removeBody(this.Body);
 
     //重建車輛
     // Create the vehicle
     this.Vehicle=new CANNON.RaycastVehicle({
         chassisBody: this.Body
     });
-    this.Vehicle.addToWorld(world);
+    this.Vehicle.addToWorld(Config.World);
 
     var ThisVehicle=this.Vehicle;
     
@@ -233,19 +245,29 @@ function TruckContainer(iConfig)
         Geometry=new THREE.CylinderBufferGeometry(Wheel.radius,Wheel.radius,Wheel.radius / 2,3);
         Material=new THREE.MeshLambertMaterial({color:0x333333});
         var WheelMash=new THREE.Mesh(Geometry,Material);
-        WheelLOD.addLevel(WheelMash,200);
+        WheelLOD.addLevel(WheelMash,150);
+        
+        WheelLOD.addLevel(new THREE.Object3D(),300);
 
         WheelLOD.quaternion.copy(WheelBody.quaternion);
         WheelLOD.position.copy(WheelBody.position);
 
         WheelMashArray.push(WheelLOD);
-        Scene.add(WheelLOD);
+        Config.Scene.add(WheelLOD);
     }
 
-    /*this.LODUpdate=function(){
-        this.LOD.update(MainCamera);
-        WheelLOD.update(MainCamera);
-    };*/
+    //更新LOD
+    this.LODUpdate=function(Camera){
+
+        //車體LOD
+        this.LOD.update(Camera);
+
+        //輪胎LOD
+        for(var i=0,j=WheelMashArray.length;i<j;i++)
+        {
+            WheelMashArray[i].update(Camera);
+        }
+    };
 
     function Ready2ResetCallBack(ThisContainer)
     {
@@ -281,7 +303,8 @@ function TruckContainer(iConfig)
     function ResetCallBack(ThisContainer)
     {
         var NewColor=CarColor[Math.floor(Math.random()*CarColor.length)];
-        ContainerBodyCube.material.color=NewColor; 
+        ContainerL1BodyCube.material.color=NewColor; 
+        ContainerL2BodyCube.material.color=NewColor; 
 
         if(WheelMashArray)
             for(var i=0,j=WheelMashArray.length;i<j;i++)
@@ -309,10 +332,10 @@ function TruckContainer(iConfig)
 
         //console.log(WheelMashArray[0].position);
 
-        for(var i=0,j=WheelMashArray.length;i<j;i++)
+        /*for(var i=0,j=WheelMashArray.length;i<j;i++)
         {
             WheelMashArray[i].update(MainCamera);
-        }
+        }*/
         
     }
 

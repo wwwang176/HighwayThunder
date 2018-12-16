@@ -407,7 +407,7 @@ function Bus(iConfig)
         NowSpeed=ThisCar.Speed;
 
         //遠光燈
-        if(Config.HaveLight)
+        if(!Config.Stay && Config.HaveLight)
         {
             if(CheckKeyBoardPress(UserKeyboardSetting.Bright))
             {

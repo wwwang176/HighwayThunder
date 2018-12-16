@@ -1,6 +1,8 @@
 function Package(iConfig)
 {
     var Config={
+        Scene:Scene,
+        World:world,
         Mass:2000,
         CanReset:true,					//是否會清除
         Position:new THREE.Vector3(0,0,-9999999),
@@ -54,7 +56,7 @@ function Package(iConfig)
     this.NeedReset=Config.CanReset;
 
     this.MeshGroup=new THREE.Group();
-    Scene.add(this.MeshGroup);
+    Config.Scene.add(this.MeshGroup);
 
     this.LOD=new THREE.LOD();
     this.MeshGroup.add(this.LOD);
@@ -71,7 +73,7 @@ function Package(iConfig)
 
     this.Body.velocity.x=-Config.InitSpeed*30/60/3.6;
 
-    world.addBody(this.Body);
+    Config.World.addBody(this.Body);
 
     this.Show=function(){
 

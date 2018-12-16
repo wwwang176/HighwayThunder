@@ -11,9 +11,10 @@
     "longDays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
 
     "Driving as quickly as possible!":"Driving as quickly as possible!",
+    "Goto garage and give up?":"Goto garage and give up?",
     "Game Over":"Game Over",
     "Driving on wrong side":"Wrong-way driving",
-    "Brush past":"Brush past",
+    "Brush past":"Near miss",
     "Drift":"Drift",
     "Fly":"Fly",
     "Road Safety Camera":"Safety Camera",

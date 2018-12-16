@@ -11,6 +11,7 @@
     "longDays": ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
 
     "Driving as quickly as possible!":"以最快的速度通过测速照相机！",
+    "Goto garage and give up?":"回到车库并放弃进度?",
     "Game Over":"结算",
     "Driving on wrong side":"逆向行驶",
     "Brush past":"擦身而过",

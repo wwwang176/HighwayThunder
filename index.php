@@ -46,11 +46,22 @@
     
     <div id="hud-canvas-div"></div>
     <div id="canvas-div"></div>
+    <div id="garage-canvas-div"></div>
     
-    <div class="dialog first-dialog" style="display: block;">
+    <div class="dialog first-dialog">
         <p><span class="i18n" data-text="Driving as quickly as possible!"></span></p>
-        <div class="button">OK</div>
+        <div class="func">
+            <div class="button">OK</div>
+        </div>
     </div>
+    <div class="dialog goto-garage-dialog has-cancel">
+        <p><span class="i18n" data-text="Goto garage and give up?"></span></p>
+        <div class="func">
+            <div class="button">OK</div>
+            <div class="cancel">Cancel</div>
+        </div>
+    </div>
+    
 
     <div class="dialog env-setting-dialog">
         <h3><span class="i18n" data-text="Setting"></span></h3>
@@ -79,7 +90,9 @@
         
         
         <p>&nbsp;</p>
-        <div class="button">OK</div>
+        <div class="func">
+            <div class="button">OK</div>
+        </div>
     </div>
 
     <div class="dialog keyboard-setting-dialog">
@@ -158,6 +171,24 @@
             <path d="M60.49,43.77V40.63a1,1,0,0,1,1-1h3.13a1,1,0,0,1,1,1v3.14a1,1,0,0,1-1,1H61.49A1,1,0,0,1,60.49,43.77Zm4.35,5.15v3.14a1,1,0,0,0,1,1H69a1,1,0,0,0,1-1V48.92a1,1,0,0,0-1-1H65.84A1,1,0,0,0,64.84,48.92Zm-8.71,0v3.14a1,1,0,0,0,1,1h3.14a1,1,0,0,0,1-1V48.92a1,1,0,0,0-1-1H57.13A1,1,0,0,0,56.13,48.92Zm14.06-4.15h3.14a1,1,0,0,0,1-1V40.63a1,1,0,0,0-1-1H70.19a1,1,0,0,0-1,1v3.14A1,1,0,0,0,70.19,44.77ZM70,56.16H66.91a1,1,0,0,0-1,1v3.13a1,1,0,0,0,1,1H70a1,1,0,0,0,1-1V57.16A1,1,0,0,0,70,56.16ZM52.78,44.77h3.14a1,1,0,0,0,1-1V40.63a1,1,0,0,0-1-1H52.78a1,1,0,0,0-1,1v3.14A1,1,0,0,0,52.78,44.77Zm9,11.39H38.34a1,1,0,0,0-1,1v3.13a1,1,0,0,0,1,1H61.79a1,1,0,0,0,1-1V57.16A1,1,0,0,0,61.79,56.16Zm-28.7,0H30a1,1,0,0,0-1,1v3.13a1,1,0,0,0,1,1h3.13a1,1,0,0,0,1-1V57.16A1,1,0,0,0,33.09,56.16ZM30,48.92v3.14a1,1,0,0,0,1,1h3.14a1,1,0,0,0,1-1V48.92a1,1,0,0,0-1-1H31A1,1,0,0,0,30,48.92Zm-3.35-4.15h3.14a1,1,0,0,0,1-1V40.63a1,1,0,0,0-1-1H26.67a1,1,0,0,0-1,1v3.14A1,1,0,0,0,26.67,44.77Zm20.76,4.15v3.14a1,1,0,0,0,1,1h3.14a1,1,0,0,0,1-1V48.92a1,1,0,0,0-1-1H48.43A1,1,0,0,0,47.43,48.92ZM82,34.05V66a2,2,0,0,1-2,2H20a2,2,0,0,1-2-2V34.05a2,2,0,0,1,2-2H80A2,2,0,0,1,82,34.05Zm-4,2H22V64H78ZM35.38,44.77h3.13a1,1,0,0,0,1-1V40.63a1,1,0,0,0-1-1H35.38a1,1,0,0,0-1,1v3.14A1,1,0,0,0,35.38,44.77Zm8.7,0h3.14a1,1,0,0,0,1-1V40.63a1,1,0,0,0-1-1H44.08a1,1,0,0,0-1,1v3.14A1,1,0,0,0,44.08,44.77Zm-5.35,4.15v3.14a1,1,0,0,0,1,1h3.14a1,1,0,0,0,1-1V48.92a1,1,0,0,0-1-1H39.73A1,1,0,0,0,38.73,48.92Z"/>
         </svg>
     </div>
+    <div id="goto-garage-button">
+        <svg enable-background="new 0 0 48 48" viewBox="0 0 48 48">
+            <g id="Expanded">
+                <g>
+                    <g>
+                        <path d="M42,48H28V35h-8v13H6V27c0-0.552,0.447-1,1-1s1,0.448,1,1v19h10V33h12v13h10V28c0-0.552,0.447-1,1-1s1,0.448,1,1V48z"/>
+                    </g>
+                    <g>
+                        <path d="M47,27c-0.249,0-0.497-0.092-0.691-0.277L24,5.384L1.691,26.723c-0.399,0.381-1.032,0.368-1.414-0.031     c-0.382-0.399-0.367-1.032,0.031-1.414L24,2.616l23.691,22.661c0.398,0.382,0.413,1.015,0.031,1.414     C47.526,26.896,47.264,27,47,27z"/>
+                    </g>
+                    <g>
+                        <path d="M39,15c-0.553,0-1-0.448-1-1V8h-6c-0.553,0-1-0.448-1-1s0.447-1,1-1h8v8C40,14.552,39.553,15,39,15z"/>
+                    </g>
+                </g>
+            </g>
+        </svg>
+    </div>
+    
 
     <div id="loading-div">
         <div class="info">
@@ -176,6 +207,38 @@
     </div>
 
     <div id="SafetyCameraFlash"></div>
+
+    <div id="garage-select-car-div">
+        
+        <div class="container clearfix">
+            <div class="next-car-button"></div>
+            <div class="perv-car-button"></div>
+            <div class="block">
+                <div class="row">
+                    <span class="i18n" data-text="Speed Max"></span>
+                    <div class="speed-max-bar bar"><div class="s"></div></div>
+                </div>
+                <div class="row">
+                    <span class="i18n" data-text="Acceleration"></span>
+                    <div class="speed-acceleration-bar bar"><div class="s"></div></div>
+                </div>
+                <div class="row">
+                    <span class="i18n" data-text="Braking Stability"></span>
+                    <div class="braking-stability-bar bar"><div class="s"></div></div>
+                </div>
+                <div class="row">
+                    <span class="i18n" data-text="Maneuverability"></span>
+                    <div class="maneuverability-bar bar"><div class="s"></div></div>
+                </div>
+                
+            </div>
+            <div class="block"></div>
+            <div class="block">
+                <div class="button racing-button">Racing!</div>
+                <!--<div class="button">Customization</div>-->
+            </div>
+        </div>
+    </div>
 
     <div id="score-check">
         <h1><span class="i18n" data-text="Game Over"></span></h1>
@@ -334,8 +397,10 @@
 
 <script>    
 
-var StatsHUD;
 var Scene, MainCamera, Renderer;
+var GarageScene, GarageMainCamera, GarageRenderer;
+var GarageMainCameraLookAtPosition=new THREE.Vector3();
+var InGarage=true;
 var MainFocusUnit;                             //主要跟隨的物件
 var MainCameraPosition = new THREE.Vector3();
 var KeyBoardPressArray=new Array(); 	        //鍵盤按鍵
@@ -360,7 +425,8 @@ else
 var SystemGameOver=false;                       //遊戲是否結束
 var SystemGameSize=400;                         //遊戲前後邊界
 var SystemStepPer=1;                            //遊戲速度
-var RequestAnimationFrameContorl;
+var RequestHighwayAnimationFrameContorl;
+var RequestGarageAnimationFrameContorl;
 var SystemRelativePosition=new THREE.Vector3(); //物件修正量
 var SystemClock=new THREE.Clock();              
 var SystemRenderClock=new THREE.Clock();
@@ -376,6 +442,19 @@ var LoadingManager = null;
 var LoadingDOM=$('#loading-div');
 var LoadingInfoDOM=$('#loading-div .info');
 var UpdateSystemObject=false;
+var GarageFocusUnit, GarageFocusUnitIndex;
+var GarageSpotLight, GarageSpotLightTargetObj;
+var GarageKeyNextPervDelay=0;
+var GarageCarSpeedScoreDOM=$('#garage-select-car-div .container .speed-max-bar .s');
+var GarageCarAccelerationScoreDOM=$('#garage-select-car-div .container .speed-acceleration-bar .s');
+var GarageCarBrakingScoreDOM=$('#garage-select-car-div .container .braking-stability-bar .s');
+var GarageCarManeuverabilityScoreDOM=$('#garage-select-car-div .container .maneuverability-bar .s');
+
+
+var StatsHUD = new Stats();
+StatsHUD.dom.style.left='auto';
+StatsHUD.dom.style.right='0px';
+$('body').append(StatsHUD.dom);
 
 var SunLight;
 
@@ -400,6 +479,7 @@ var HUDLastSpeed=0;
 
 var GroundBody;
 var world;
+var GarageWorld;
 var physicsMaterial;
 var groundMaterial;
 var WallMaterial;
@@ -412,11 +492,14 @@ var DebugMeedResetCarCount=0;
 var CollideWokerBusy=false;
 var CollideWoker=null;
 
+var GarageAllCar=[];
+var GarageAllPackage=[];
 
+var UserCar=null;       //玩家車輛
 var AllCar=[];          //所有車輛
 var AllPackage=[];      //所有物體
 var AllFloor=[];
-var RoadTexture=null,LineTexture=null,GrassTexture=null;
+var RoadTexture=null,GarageRoadTexture=null,LineTexture=null,GrassTexture=null;
 var AllLane=[];
 var SmokeArray=[];
 var SmokeSetIndex=0;
@@ -507,9 +590,18 @@ function WindowResize()
         MainCamera.aspect=window.innerWidth/window.innerHeight;
         MainCamera.updateProjectionMatrix();
     }
+    if(GarageMainCamera)
+    {
+        GarageMainCamera.aspect=window.innerWidth/window.innerHeight;
+        GarageMainCamera.updateProjectionMatrix();
+    }
     
     if(Renderer)
         Renderer.setSize(window.innerWidth,window.innerHeight);
+    
+    if(GarageRenderer)
+        GarageRenderer.setSize(window.innerWidth,window.innerHeight);
+
 };
 
 $(function(){
@@ -519,6 +611,15 @@ $(function(){
 function StartInit()
 {
     initCannon();
+    LoadResource(function(){
+
+        $(LoadingInfoDOM).find('.text').html('Cerate World');
+        InitGarage();
+        InitHighway();
+        
+        $(LoadingDOM).hide();
+        SceneChange();
+    });
 }
 
 var sphereShape, sphereBody, world;
@@ -537,17 +638,23 @@ function initCannon(){
     world.defaultContactMaterial.contactEquationRelaxation = 4;
     solver.iterations = 7;
     solver.tolerance = 0.1;
-
-    var split = true;
-    if(split)
-        world.solver = new CANNON.SplitSolver(solver);
-    else
-        world.solver = solver;
-
-    //world.gravity.set(0,-9.8/2,0);
+    world.solver = new CANNON.SplitSolver(solver);
     world.gravity.set(0,0,-9.8/2);
-
     world.broadphase = new CANNON.NaiveBroadphase();
+
+    // Setup GarageWorld
+    GarageWorld = new CANNON.World();
+    GarageWorld.quatNormalizeSkip = 0;
+    GarageWorld.quatNormalizeFast = false;
+    var solver = new CANNON.GSSolver();
+    GarageWorld.defaultContactMaterial.contactEquationStiffness = 1e9;
+    GarageWorld.defaultContactMaterial.contactEquationRelaxation = 4;
+    solver.iterations = 7;
+    solver.tolerance = 0.1;
+    GarageWorld.solver = new CANNON.SplitSolver(solver);
+    GarageWorld.gravity.set(0,0,-9.8/2);
+    GarageWorld.broadphase = new CANNON.NaiveBroadphase();
+    
 
     //預設材質碰撞
     // Create a slippery material (friction coefficient = 0.0)
@@ -649,11 +756,9 @@ function initCannon(){
         mass: 0,
         material:groundMaterial
     });
-    //groundShape.collisionResponse = 0;
-    //GroundBody.position.z=-10;
     GroundBody.addShape(groundShape);
-    //groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
     world.addBody(GroundBody);
+    GarageWorld.addBody(GroundBody);
 
 
     GroundBody.addEventListener("collide",function(e){
@@ -718,11 +823,9 @@ function initCannon(){
     RGroundBody2.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI/4);
     world.addBody(RGroundBody2);
 
-    LoadResource();
-
 }
 
-function LoadResource()
+function LoadResource(CallBack)
 {
     //Set LoadingManager
     LoadingManager=new THREE.LoadingManager();
@@ -734,10 +837,7 @@ function LoadResource()
         $(LoadingInfoDOM).find('.text').html(Url);
         $(LoadingInfoDOM).find('.bar .s').css({width:(Per*100)+'%'});
     };
-    LoadingManager.onLoad=function(){
-        $(LoadingInfoDOM).find('.text').html('Cerate World');
-        Init();
-    };
+    LoadingManager.onLoad=CallBack;
 
     //讀取外部物件
     var loader = new THREE.ObjectLoader(LoadingManager);
@@ -768,6 +868,11 @@ function LoadResource()
     RoadTexture.wrapT = THREE.RepeatWrapping;
     RoadTexture.repeat.set(5,5);
     
+    GarageRoadTexture = new THREE.TextureLoader(LoadingManager).load("textures/road-small.jpg");
+    GarageRoadTexture.wrapS = THREE.RepeatWrapping;
+    GarageRoadTexture.wrapT = THREE.RepeatWrapping;
+    GarageRoadTexture.repeat.set(500,500);
+    
     LineTexture = new THREE.TextureLoader(LoadingManager).load("textures/line.png");
     LineTexture.wrapS = THREE.RepeatWrapping;
     LineTexture.wrapT = THREE.RepeatWrapping;
@@ -782,16 +887,141 @@ function LoadResource()
     //BillboardTexture.minFilter = THREE.LinearMipMapLinearFilter;
 }
 
-function Init()
+function InitGarage()
 {
+    $(LoadingDOM).show();
+    $(LoadingInfoDOM).find('.bar .s').css({width:'99%'});
+    $(LoadingInfoDOM).find('.text').html('Cerate Garage');
+
     //歸零
+    cancelAnimationFrame(RequestGarageAnimationFrameContorl);
+
+    //Scene
+    GarageScene=new THREE.Scene();
+
+    //MainCamera
+    GarageMainCamera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1,500);
+    GarageMainCamera.up=new THREE.Vector3(0,0,1);
+    GarageMainCamera.position.set(-10,5,2);
+    
+    GarageMainCamera.lookAt(0,0,0);
+    GarageScene.add(GarageMainCamera);
+
+    //Renderer
+    GarageRenderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+    //Renderer.setClearColor(0xaaccff);
+    GarageRenderer.setClearColor((NightMode)?0x111111:0xaaccff);
+    GarageRenderer.setPixelRatio( window.devicePixelRatio );
+    GarageRenderer.setSize( window.innerWidth, window.innerHeight );
+    $('#garage-canvas-div').empty();
+    $('#garage-canvas-div').append(GarageRenderer.domElement);
+
+    //環境光
+    var Ambient = new THREE.AmbientLight(0xffffff,(NightMode)?0.2:0.7);
+    GarageScene.add(Ambient);
+
+    //SpotLight 
+    GarageSpotLight = new THREE.SpotLight(0xffffff, 1, 30, Math.PI/4, 0.3);
+    GarageSpotLight.position.set(-10,5,10);
+    GarageScene.add(GarageSpotLight);
+
+    GarageSpotLightTargetObj=new THREE.Object3D();
+    GarageSpotLightTargetObj.position.set(0,0,0);
+    GarageScene.add(GarageSpotLightTargetObj);
+    GarageSpotLight.target=GarageSpotLightTargetObj;
+
+    //地面
+    Geometry=new THREE.PlaneBufferGeometry(2000,2000,1,1);
+    Material=new THREE.MeshPhongMaterial({color:0x666666,map:GarageRoadTexture});
+    var GroundMash=new THREE.Mesh(Geometry,Material);
+    GroundMash.position.z=0;
+    GroundMash.receiveShadow=true;  //接收陰影
+    GarageScene.add(GroundMash);
+
+    //建構車輛
+    GarageAllCar=[];
+
+    var NewCar=new Sedan({
+        Ai:false,
+        CanReset:false,
+        Stay:true,
+        Scene:GarageScene,
+        World:GarageWorld,
+        HaveLight:true,
+        GarageScore:{
+            SpeedMax:0.65,
+            Acceleration:0.7,
+            Braking:0.5,
+            Maneuverability:0.57
+        },
+        Position:new THREE.Vector3(2,-5,2)
+    });
+    GarageAllCar.push(NewCar);
+    GarageFocusUnitIndex=0;
+    GarageFocusUnit=NewCar;
+    GarageCarChange();
+
+    var NewCar=new Bus({
+        Ai:false,
+        CanReset:false,
+        Stay:true,
+        Scene:GarageScene,
+        World:GarageWorld,
+        HaveLight:true,
+        GarageScore:{
+            SpeedMax:0.4,
+            Acceleration:0.5,
+            Braking:0.3,
+            Maneuverability:0.5
+        },
+        Position:new THREE.Vector3(6.25,0,2)
+    });
+    GarageAllCar.push(NewCar);
+
+    var NewCar=new TrailerTruck({
+        Ai:false,
+        CanReset:false,
+        Stay:true,
+        Scene:GarageScene,
+        World:GarageWorld,
+        HaveLight:true,
+        GarageScore:{
+            SpeedMax:0.38,
+            Acceleration:0.3,
+            Braking:0.25,
+            Maneuverability:0.45
+        },
+        Position:new THREE.Vector3(3.6,5,2)
+    });
+    NewCar.SetConstraint(true);
+    GarageAllCar.push(NewCar);
+    GarageAllPackage.push(NewCar.Container);
+    
+
+
+    //Start Animate
+    /*setTimeout(function(){
+        $(LoadingDOM).hide();
+        AnimateGarage();
+    },1000);*/
+}
+
+function InitHighway()
+{
+    $(LoadingDOM).show();
+    $(LoadingInfoDOM).find('.bar .s').css({width:'99%'});
+    $(LoadingInfoDOM).find('.text').html('Cerate Highway');
+
+    //歸零
+    AllCar=[];
+    AllPackage=[];
     SystemGameOver=false;
     SystemStepPer=1;
     SystemRelativePosition=new THREE.Vector3();
     HUDLastPRMPer=0;
     HUDLastSpeed=0;
     DebugMeedResetCarCount=0;
-    cancelAnimationFrame(RequestAnimationFrameContorl);
+    cancelAnimationFrame(RequestHighwayAnimationFrameContorl);
 
     UserMileage=1000*0;         //玩家里程數
     UserDriveMileageMax=0;      //玩家遊戲最高里程數
@@ -821,13 +1051,6 @@ function Init()
     PutTrafficCone5000State=false;      //放置交通錐的狀態
     $(UserSafetyCameraStateDOM).show();
 
-    if(StatsHUD)
-        $(StatsHUD.dom).remove();
-    StatsHUD = new Stats();
-    StatsHUD.dom.style.left='auto';
-    StatsHUD.dom.style.right='0px';
-    $('body').append(StatsHUD.dom);
-
     //Scene
     Scene=new THREE.Scene();
     //Scene.fog = new THREE.Fog(0xaaccff,5000,10000);
@@ -845,20 +1068,6 @@ function Init()
     SunLight.position.set(200,-300,500);
     Scene.add(SunLight);
 
-    /*SunLight.castShadow=true;
-    SunLight.shadowMapWidth = 512;
-    SunLight.shadowMapHeight = 512;
-
-    var d = 200;
-
-    SunLight.shadowCameraLeft = -d;
-    SunLight.shadowCameraRight = d;
-    SunLight.shadowCameraTop = d;
-    SunLight.shadowCameraBottom = -d;
-
-    SunLight.shadowCameraFar = 1000;
-    SunLight.shadowDarkness = 0.8;*/
-
     SetSunShadow(1024);
 
     //helper = new THREE.CameraHelper( SunLight.shadow.camera );
@@ -874,7 +1083,6 @@ function Init()
     var GroundMash=new THREE.Mesh(Geometry,Material);
     GroundMash.position.z=0;
     GroundMash.receiveShadow=true;  //接收陰影
-    //GroundMash.rotation.x=-90*Math.PI/180;
     Scene.add(GroundMash);
 
     //牆面
@@ -1032,8 +1240,7 @@ function Init()
 
 
     //建構車輛
-    AllCar=[];
-    for(var i=0;i<40;i++)
+    for(var i=0;i<35;i++)
     {
         if(i%3==0)
         {
@@ -1043,6 +1250,7 @@ function Init()
                 Position:new THREE.Vector3(0,0,0)
             });
             AllCar.push(NewCar2);
+            AllPackage.push(NewCar2.Container);
         }
         if(i%4==0)
         {
@@ -1062,41 +1270,75 @@ function Init()
         AllCar.push(NewCar);
     }
 
-    /*for(var i=0;i<30;i++)
-    {
-        var NewCar=new Bus({
-            Ai:true,
-            CanReset:true,
-            Position:new THREE.Vector3(0,0,0)
-        });
-        AllCar.push(NewCar);
-    }*/
-
-
     //UserCar
-    var NewCar=new Sedan({
-        HaveLight:true,
-        InitSpeed:1,
-        Position:new THREE.Vector3(0,3,4)
-    });
-
+    if(GarageFocusUnit instanceof Sedan)
     {
-        //NewCar.SetConstraint(true);
+        UserCar=new Sedan({
+            HaveLight:true,
+            InitSpeed:1,
+            Position:new THREE.Vector3(0,3,4)
+        });
     }
-    AllCar.push(NewCar); 
-    MainFocusUnit=NewCar;
+    else if(GarageFocusUnit instanceof Bus)
+    {
+        UserCar=new Bus({
+            HaveLight:true,
+            InitSpeed:1,
+            Position:new THREE.Vector3(0,3,4)
+        });
+    }
+    else if(GarageFocusUnit instanceof TrailerTruck)
+    {
+        UserCar=new TrailerTruck({
+            HaveLight:true,
+            InitSpeed:1,
+            Position:new THREE.Vector3(0,3,4)
+        });
+        UserCar.SetConstraint(true);
+        AllPackage.push(UserCar.Container);
+    }
+    
+    AllCar.push(UserCar);
+    MainFocusUnit=UserCar;
 
+    //Init Worker
+    InitCollideWoker();
+
+    console.log( 'Loading complete!');
+    
+    if(UpdateSystemObject)
+    {
+        setInterval(function()
+        {
+            UpdateSystemObjectCount();
+        },1000);
+    }
+    
+
+    //Start Animate
+    /*setTimeout(function(){
+        $(LoadingDOM).hide();
+        AnimateHighway();
+    },1000);*/
+    
+}
+
+function InitCollideWoker()
+{
     //Init Worker
     if(CollideWoker!=null)CollideWoker.terminate();
     CollideWoker=new Worker("CarCollideWorker.js?"+Rand(9999999));
     CollideWokerBusy=false;
+
+    //Worker Callback
+    CollideWoker.onmessage=CollideWokerOnMessageCallBack;
 
     //Set Worker
     var NewCarCollideData=[];
     for(var i=0;i<AllCar.length;i++)
     {
         NewCarCollideData.push({
-            Pass:/*true,*/AllCar[i].NeedReset,
+            Pass:AllCar[i].NeedReset,
             Position:AllCar[i].Body.position,
             Size:AllCar[i].BodySize,
             MoveVector:AllCar[i].MoveDiff,
@@ -1123,27 +1365,6 @@ function Init()
         CarData:NewCarCollideData,
         PackageData:NewPackageCollideData
     });
-
-    //Worker Callback
-    CollideWoker.onmessage=CollideWokerOnMessageCallBack;
-
-    console.log( 'Loading complete!');
-    
-    if(UpdateSystemObject)
-    {
-        setInterval(function()
-        {
-            UpdateSystemObjectCount();
-        },1000);
-    }
-    
-
-    //Start Animate
-    setTimeout(function(){
-        $(LoadingDOM).hide();
-        Animate();
-    },1000);
-    
 }
 
 //Woker CallBack
@@ -1185,11 +1406,67 @@ function SetSunShadow(Size,PositionX=0,PositionZ=0)
     SunLight.shadow.camera.updateProjectionMatrix();
 }
 
-function Animate()
+function AnimateGarage()
+{
+    StatsHUD.update();
+
+    GarageMainCamera.position.x=GarageMainCamera.position.x*0.9+0.1*(GarageFocusUnit.Body.position.x-GarageFocusUnit.BodySize.x/2-3);
+    GarageMainCamera.position.y=GarageMainCamera.position.y*0.9+0.1*(GarageFocusUnit.Body.position.y+2);
+    GarageMainCamera.position.z=GarageMainCamera.position.z*0.9+0.1*(GarageFocusUnit.Body.position.z+1);
+
+    GarageMainCameraLookAtPosition.x=GarageMainCameraLookAtPosition.x*0.85+0.15*(GarageFocusUnit.Body.position.x-GarageFocusUnit.BodySize.x/2);
+    GarageMainCameraLookAtPosition.y=GarageMainCameraLookAtPosition.y*0.85+0.15*(GarageFocusUnit.Body.position.y);
+    GarageMainCameraLookAtPosition.z=GarageMainCameraLookAtPosition.z*0.85+0.15*(GarageFocusUnit.Body.position.z);
+    
+    GarageMainCamera.lookAt(
+        GarageMainCameraLookAtPosition.x,
+        GarageMainCameraLookAtPosition.y,
+        GarageMainCameraLookAtPosition.z
+    );
+
+    GarageWorld.step((1/30)*SystemStepPer);
+
+    for(var i=0;i<GarageAllCar.length;i++)
+    {
+        GarageAllCar[i].Run();
+        GarageAllCar[i].LODUpdate(GarageMainCamera);
+    }
+    for(var i=0,j=GarageAllPackage.length;i<j;i++)
+    {
+        GarageAllPackage[i].Run();
+        GarageAllPackage[i].LODUpdate(GarageMainCamera);
+    }
+
+    GarageRenderer.render(GarageScene, GarageMainCamera);
+
+    if(!KeyBoardPressArray[39] && !KeyBoardPressArray[37])
+    {
+        GarageKeyNextPervDelay=0;
+    }
+    if(GarageKeyNextPervDelay>0)
+    {
+        GarageKeyNextPervDelay--;
+    }
+    else
+    {
+        if(KeyBoardPressArray[39])
+        {
+            GaragePervCar();
+            GarageKeyNextPervDelay=20;
+        }
+        else if(KeyBoardPressArray[37])
+        {
+            GarageNextCar();
+            GarageKeyNextPervDelay=20;
+        }
+    }
+
+    RequestGarageAnimationFrameContorl=requestAnimationFrame(AnimateGarage);
+}
+
+function AnimateHighway()
 {
     SystemClock.start();
-
-    //console.log(MainFocusUnit.Container.Body.position);
 
     //Reset to 0
     if(MainFocusUnit!=null)
@@ -1206,8 +1483,6 @@ function Animate()
             0-MainFocusUnit.Body.position.y,
             0-MainFocusUnit.Body.position.z);
 
-        //console.log(SystemRelativePosition);
-
         UserMileage+=SystemRelativePosition.x;
 
         UserMileagePer=UserMileage/UserMileageMax;
@@ -1215,8 +1490,6 @@ function Animate()
         else if(UserMileagePer<0)UserMileagePer=0;
 
         UserDriveMileageMax=Math.max(UserMileage,UserDriveMileageMax);
-
-        //console.log(UserMileage);
 
         for(var i=0,j=AllCar.length;i<j;i++)
         {
@@ -1345,7 +1618,7 @@ function Animate()
 
     MainCameraPosition=MainCamera.getWorldPosition();
 
-    RequestAnimationFrameContorl=requestAnimationFrame(Animate);
+    RequestHighwayAnimationFrameContorl=requestAnimationFrame(AnimateHighway);
 
     SystemRunClock.start();
 
@@ -1354,12 +1627,12 @@ function Animate()
     for(var i=0,j=AllCar.length;i<j;i++)
     {
         AllCar[i].Run();
-        AllCar[i].LODUpdate();
+        AllCar[i].LODUpdate(MainCamera);
     }
     for(var i=0,j=AllPackage.length;i<j;i++)
     {
         AllPackage[i].Run();
-        AllPackage[i].LODUpdate();
+        AllPackage[i].LODUpdate(MainCamera);
     }
 
     SystemAiClock.start();
@@ -1409,16 +1682,13 @@ function Animate()
 
 
     var F=MainFocusUnit.Camera.getWorldPosition();
-    //var F=AllCar[0].Camera.getWorldPosition();
-
-
+    //var F=AllCar[3].Camera.getWorldPosition();
     MainCamera.position.x=F.x;
     MainCamera.position.y=F.y;
     MainCamera.position.z=F.z;
 
     var F=MainFocusUnit.Camera.getWorldQuaternion();
-    //var F=AllCar[0].Camera.getWorldQuaternion();
-
+    //var F=AllCar[3].Camera.getWorldQuaternion();
     MainCamera.quaternion.x=F.x;
     MainCamera.quaternion.y=F.y;
     MainCamera.quaternion.z=F.z;
@@ -1428,7 +1698,6 @@ function Animate()
 
     //if(Date.now()-SystemRenderTimePoint>(1000/SystemRenderTargetFps))
     {
-
         StatsHUD.update();
 
         SystemRenderClock.start();
@@ -1445,7 +1714,7 @@ function Animate()
         if(MainFocusUnit!=null)
         {
             var DisplayUnit=MainFocusUnit;
-            //DisplayUnit=AllCar[0];
+            //DisplayUnit=AllCar[3];
 
             //速度
             HUDSpeedKmDiv.html(Math.round(DisplayUnit.Speed.x*-3.6*60 *((UserEnvironmentSetting.UnitofSpeed=='mph')?0.621371192237334:1) ));
@@ -1463,7 +1732,7 @@ function Animate()
             var Max=-(HUDRPMSvgstrokeDashoffsetMin)-30;
             var Min=-(HUDRPMSvgstrokeDashoffsetMax)+30;
             var Value=(Max-Min)*(HUDLastPRMPer)+Min;
-            HUDRPMDiv.css({strokeDashoffset:Value,stroke:(HUDLastPRMPer>0.9)?'#f00':'#fff'});
+            HUDRPMDiv.css({strokeDashoffset:Value,stroke:(HUDLastPRMPer>=DisplayUnit.BestGearPer)?'#f00':'#fff'});
 
             //GEAR
             //console.log(DisplayUnit.NowGearDashArrayData);
@@ -1488,7 +1757,7 @@ function Animate()
     //計算分數
     if(!SystemGameOver)
     {
-        UserSpeedBonusPer=Math.abs(MainFocusUnit.Speed.x)+1;
+        UserSpeedBonusPer=Math.abs(MainFocusUnit.Speed.x)*2+1;
 
         if(UserMileage<UserDriveMileageMax)
             UserSpeedBonusPer=0;
@@ -1857,6 +2126,9 @@ $('.env-setting-dialog .speedunit-row .right .item[data-unit="'+UserEnvironmentS
 $('.dialog .button').on('click',function(){
     $(this).parents('.dialog').hide();
 });
+$('.dialog .cancel').on('click',function(){
+    $(this).parents('.dialog').hide();
+});
 
 $('#score-check .button').on('click',function(){
     $(this).parents('#score-check').hide();
@@ -1871,6 +2143,97 @@ $('#keyboard-setting-button').on('click',function(){
     $('.keyboard-setting-dialog').show();
 });
 
+$('#garage-select-car-div .container .next-car-button').on('click',function(){
+    
+    GarageNextCar();
+});
+$('#garage-select-car-div .container .perv-car-button').on('click',function(){
+
+    GaragePervCar();
+});
+$('#garage-select-car-div .racing-button').on('click',function(){
+    
+    InGarage=false;
+
+    $(LoadingDOM).show();
+    $(LoadingInfoDOM).find('.text').html('Cerate World');
+
+    initCannon();
+    InitHighway();
+
+    setTimeout(function(){
+        $(LoadingDOM).hide();
+        SceneChange();
+    },1000);
+});
+$('#goto-garage-button').on('click',function(){
+
+    $('.goto-garage-dialog').show();
+});
+$('.goto-garage-dialog .button').on('click',function(){
+
+    InGarage=true;
+
+    initCannon();
+    InitGarage();
+
+    setTimeout(function(){
+        $(LoadingDOM).hide();
+        SceneChange();
+    },1000);
+});
+
+function GarageNextCar()
+{
+    GarageFocusUnitIndex++;
+    if(GarageFocusUnitIndex>=GarageAllCar.length-1)
+        GarageFocusUnitIndex=GarageAllCar.length-1;
+    
+    GarageFocusUnit=GarageAllCar[GarageFocusUnitIndex];
+    GarageCarChange();
+}
+function GaragePervCar()
+{
+    GarageFocusUnitIndex--;
+    if(GarageFocusUnitIndex<=0)
+        GarageFocusUnitIndex=0;
+    
+    GarageFocusUnit=GarageAllCar[GarageFocusUnitIndex];
+    GarageCarChange();
+}
+function GarageCarChange()
+{
+    var CarScore=GarageFocusUnit.GetConfig().GarageScore;
+    GarageCarSpeedScoreDOM.css({width:CarScore.SpeedMax*100+'%'});
+    GarageCarAccelerationScoreDOM.css({width:CarScore.Acceleration*100+'%'});
+    GarageCarBrakingScoreDOM.css({width:CarScore.Braking*100+'%'});
+    GarageCarManeuverabilityScoreDOM.css({width:CarScore.Maneuverability*100+'%'});
+    
+}
+function SceneChange()
+{
+    cancelAnimationFrame(RequestGarageAnimationFrameContorl);
+    cancelAnimationFrame(RequestHighwayAnimationFrameContorl);
+    
+    if(InGarage)
+    {
+        $('#canvas-div').hide();
+        $('#garage-canvas-div').show();
+        $('#garage-select-car-div').show();
+        $('.first-dialog').hide();
+        AnimateGarage();
+    }
+    else
+    {
+        $('#canvas-div').show();
+        $('#garage-canvas-div').hide();
+        $('#garage-select-car-div').hide();
+        $('.first-dialog').show();
+        AnimateHighway();
+    }
+}
+
+
 $('.env-setting-dialog .language-row .right .item').on('click',function(){
     var Lan=$(this).data('language');
 
@@ -1881,7 +2244,6 @@ $('.env-setting-dialog .language-row .right .item').on('click',function(){
     EnvironmentChange();
     
     SetLanguage(Lan);
-    LanguageChange();
 });
 
 $('.env-setting-dialog .speedunit-row .right .item').on('click',function(){
@@ -1903,6 +2265,8 @@ function SetLanguage(NewLanguage)
         'lang': NewLanguage, //e.g. en-us, zh-tw. Default is auto detect from browser.
         'path': 'lang' // Default is empty (same level as i18n.js)
     });
+
+    LanguageChange();
 }
 SetLanguage(UserEnvironmentSetting.Language);
 function LanguageChange()
@@ -1912,7 +2276,6 @@ function LanguageChange()
         $(this).html(i18n.t(Text));
     });
 }
-LanguageChange();
 
 function SetSpeedUnit()
 {

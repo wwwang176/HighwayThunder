@@ -320,7 +320,7 @@ function Sedan(iConfig)
         ReversingLeftLight.visible=ReversingRightLight.visible=(ThisCar.GetNowGear()==0);
 
         //遠光燈
-        if(Config.HaveLight)
+        if(!Config.Stay && Config.HaveLight)
         {
             if(CheckKeyBoardPress(UserKeyboardSetting.Bright))
             {

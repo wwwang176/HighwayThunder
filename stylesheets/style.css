@@ -54,6 +54,16 @@ body {
   height: 100%;
 }
 
+#garage-canvas-div
+{
+    position: absolute;
+    z-index: 50;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
 a
 {
 	color: inherit;
@@ -112,6 +122,14 @@ h5
     line-height: 150%;
 	transform:translateX(-50%) translateY(-50%);
 }
+.dialog .func
+{
+    position: relative;
+}
+.dialog.has-cancel .func div
+{
+    display: inline-block;
+}
 .dialog .button
 {
 	display: inline-block;
@@ -120,6 +138,18 @@ h5
     cursor: pointer;
 }
 .dialog .button:hover
+{
+    background: #FFF;
+    color: #000;
+}
+.dialog .cancel
+{
+	display: inline-block;
+    border: 2px solid #FFF;
+    padding: 5px 20px;
+    cursor: pointer;
+}
+.dialog .cancel:hover
 {
     background: #FFF;
     color: #000;
@@ -177,6 +207,34 @@ h5
     background-color: #FFF;
 }
 #keyboard-setting-button:hover svg path
+{
+    fill: #000;
+}
+
+#goto-garage-button
+{
+    position: absolute;
+    z-index: 999998;
+    bottom: 0;
+    left: 80px;
+    padding: 9px 10px 11px 10px;
+    background-color: rgba(255,255,255,0.1);
+    cursor: pointer;
+}
+#goto-garage-button svg
+{
+    display: block;
+    width: 20px;
+}
+#goto-garage-button svg path
+{
+    fill: white;
+}
+#goto-garage-button:hover
+{
+    background-color: #FFF;
+}
+#goto-garage-button:hover svg path
 {
     fill: #000;
 }
@@ -309,6 +367,161 @@ h5
     left: 0;
     width:100%;
     height:100%;
+}
+
+#garage-select-car-div
+{
+    position: absolute;
+    z-index: 51;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.85);
+    color: #FFF;
+    padding: 20px 0;
+}
+#garage-select-car-div .button
+{
+    display: block;
+    border: 2px solid #FFF;
+    padding: 5px 20px;
+    cursor: pointer;
+    text-align: center;
+}
+#garage-select-car-div .racing-button
+{
+    margin-top: 50px;
+}
+#garage-select-car-div .container
+{
+    position: relative;
+    width: 900px;
+    margin: 0 auto;
+}
+#garage-select-car-div .container .next-car-button
+{
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: -50px;
+    width: 50px;
+    height: 100%;
+    cursor: pointer;
+}
+#garage-select-car-div .container .next-car-button:after
+{
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 5px;
+    width: 30px;
+    height: 5px;
+    background: #FFF;
+    transform: rotate(-45deg);
+    margin-top: -11px;
+}
+#garage-select-car-div .container .next-car-button:before
+{
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 5px;
+    width: 30px;
+    height: 5px;
+    background: #FFF;
+    transform: rotate(45deg);
+    margin-top: 8px;
+}
+#garage-select-car-div .container .next-car-button:hover
+{
+    background-color: #FFF;
+}
+#garage-select-car-div .container .next-car-button:hover:after
+{
+    background-color: #000;
+}
+#garage-select-car-div .container .next-car-button:hover:before
+{
+    background-color: #000;
+}
+#garage-select-car-div .container .perv-car-button
+{
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: -50px;
+    width: 50px;
+    height: 100%;
+    cursor: pointer;
+}
+#garage-select-car-div .container .perv-car-button:after
+{
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: 5px;
+    width: 30px;
+    height: 5px;
+    background: #FFF;
+    transform: rotate(45deg);
+    margin-top: -11px;
+}
+#garage-select-car-div .container .perv-car-button:before
+{
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: 5px;
+    width: 30px;
+    height: 5px;
+    background: #FFF;
+    transform: rotate(-45deg);
+    margin-top: 8px;
+}
+#garage-select-car-div .container .perv-car-button:hover
+{
+    background-color: #FFF;
+}
+#garage-select-car-div .container .perv-car-button:hover:after
+{
+    background-color: #000;
+}
+#garage-select-car-div .container .perv-car-button:hover:before
+{
+    background-color: #000;
+}
+#garage-select-car-div .container .block
+{
+    position: relative;
+    float: left;
+    width: 33.33%;
+    padding: 20px;
+}
+#garage-select-car-div .container .block .row
+{
+    margin-bottom: 5px;
+}
+#garage-select-car-div .container .block .bar
+{
+    position: relative;
+    width: 100%;
+    height: 5px;
+    border: 1px solid rgba(255,255,255,0.5);
+}
+#garage-select-car-div .container .block .bar .s
+{
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: #FFF;
+    transition: width .5s;
 }
 
 #score-check

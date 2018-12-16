@@ -5,7 +5,7 @@ importScripts('javascripts/cannon.min.js');
 
 var AllCar=[];
 var AllPackage=[];
-var Scene = new THREE.Scene();
+var Scene;
 
 var DebugCount=0;
 
@@ -518,6 +518,10 @@ self.onmessage = function(e){
 
 	if(Data.Type=='Init')
 	{
+		Scene = new THREE.Scene();
+		AllCar=[];
+		AllPackage=[];
+
 		for(var i=0;i<Data.PackageData.length;i++)
 		{
 			var NewPackage=new FakePackage(Data.PackageData[i]/*{

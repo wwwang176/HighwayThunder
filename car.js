@@ -1,7 +1,10 @@
 function Car(iConfig)
 {
 	var Config={
-        Mass:2000,
+        Scene:Scene,
+        World:world,
+        Stay:false,                     //是否不能被操控
+        Mass:2000,                      //質量
         EngineForce:18000,              //引擎力量
         BrakeForce:200,                 //煞車力量
 		HaveO2N2:true,					//氮氣
@@ -177,6 +180,8 @@ function Car(iConfig)
     this.Speed=new CANNON.Vec3();   //車輛速度
 
     var NowGear=0;                  //目前檔位
+    this.BestGearPer=0;             //最佳升檔轉速百分比
+    this.BestPervGearPer=0;         //最佳降檔轉速百分比
     var NowEngineSpeedPer=0;		//目前引擎轉速百分比
     var NowClutchPer=0;             //目前離合器百分比
     var EngineOverRunningDelayTime=0;   //引擎超轉時油門延遲
@@ -209,7 +214,7 @@ function Car(iConfig)
     this.OnFly=false;               //是否飛行中
 
     this.MeshGroup=new THREE.Group();
-    Scene.add(this.MeshGroup);
+    Config.Scene.add(this.MeshGroup);
 
     this.LOD=new THREE.LOD();
     this.MeshGroup.add(this.LOD);
@@ -241,7 +246,7 @@ function Car(iConfig)
     this.Vehicle=new CANNON.RaycastVehicle({
         chassisBody: this.Body
     });
-    this.Vehicle.addToWorld(world);
+    this.Vehicle.addToWorld(Config.World);
 
     //建構車輪----------
 
@@ -271,8 +276,6 @@ function Car(iConfig)
         Geometry=new THREE.CylinderBufferGeometry(Wheel.radius,Wheel.radius,Wheel.radius / 2,10);
         Material=new THREE.MeshLambertMaterial({color:0x333333});
         var WheelMash=new THREE.Mesh(Geometry,Material);
-        WheelMash.castShadow=true;
-        WheelMash.receiveShadow=true;
         WheelLOD.addLevel(WheelMash,0);
         
         Geometry=new THREE.CylinderBufferGeometry(Wheel.radius,Wheel.radius,Wheel.radius / 2,5);
@@ -283,25 +286,27 @@ function Car(iConfig)
         Geometry=new THREE.CylinderBufferGeometry(Wheel.radius,Wheel.radius,Wheel.radius / 2,3);
         Material=new THREE.MeshLambertMaterial({color:0x333333});
         var WheelMashL2=new THREE.Mesh(Geometry,Material);
-        WheelLOD.addLevel(WheelMashL2,200);
+        WheelLOD.addLevel(WheelMashL2,150);
+
+        WheelLOD.addLevel(new THREE.Object3D(),300);
 
         WheelLOD.quaternion.copy(WheelBody.quaternion);
         WheelLOD.position.copy(WheelBody.position);
 
         WheelMashArray.push(WheelLOD);
-        Scene.add(WheelLOD);
+        Config.Scene.add(WheelLOD);
     }
 
     //更新LOD
-    this.LODUpdate=function(){
+    this.LODUpdate=function(Camera){
 
         //車體LOD
-        this.LOD.update(MainCamera);
+        this.LOD.update(Camera);
 
         //輪胎LOD
         for(var i=0,j=WheelMashArray.length;i<j;i++)
         {
-            WheelMashArray[i].update(MainCamera);
+            WheelMashArray[i].update(Camera);
         }
     };
 
@@ -314,6 +319,12 @@ function Car(iConfig)
         for (var i = 0,j=this.Vehicle.wheelInfos.length; i < j; i++) {
             this.Vehicle.wheelInfos[i].customSlidingRotationalSpeed= -(Config.Gear[NowGear].TargetSpeed/2.1384);
         }
+
+        this.BestGearPer=1-(Config.Gear[NowGear].TorquePer*0.85);
+        this.BestPervGearPer=0;
+
+        if(NowGear-1>=1)
+            this.BestPervGearPer=1-(Config.Gear[NowGear-1].TorquePer);
 
         this.MathGearDashArray();
     };
@@ -522,9 +533,8 @@ function Car(iConfig)
             this.AiHitDelay=60;
             this.AiTargetLane=TargetLane;
             this.AiTargetLaneYOffset=RandF(Config.AiTargetLaneYOffsetMax)-Config.AiTargetLaneYOffsetMax*0.5;
-            this.AiChangeLaneTime=0;
             this.AiChangeLaneTimeMax=(Rand(60*4)+60*6)*this.AiChangeLaneTimeMaxPer;
-
+            this.AiChangeLaneTime=Math.floor(Rand(this.AiChangeLaneTimeMax)*0.8);
             this.NeedReset=false;
             this.AiHasCrack=false;
             this.AiHasCrackTime=0;
@@ -684,7 +694,7 @@ function Car(iConfig)
 
         //是否使用氮氣
         var UseN2O=false;
-        if(!this.IsAi && !SystemGameOver)
+        if(!Config.Stay && !this.IsAi && !SystemGameOver)
             UseN2O=CheckKeyBoardPress(UserKeyboardSetting.N2O);
 
         //消耗氮氣
@@ -708,7 +718,7 @@ function Car(iConfig)
 
 
         //手排
-    	if(!this.IsAi && !Config.AutoGear && !SystemGameOver)
+    	if(!Config.Stay && !this.IsAi && !Config.AutoGear && !SystemGameOver)
     	{
             //進檔
             if(!KeyNextGear && CheckKeyBoardPress(UserKeyboardSetting.NextGear))
@@ -738,7 +748,7 @@ function Car(iConfig)
 	    else
 	    {
             //如果引擎高轉速則準備進檔
-            if(NowEngineSpeedPer>0.85)
+            if(NowEngineSpeedPer>this.BestGearPer)
             {
                 AutoGearDelayTime+=1;
 
@@ -776,7 +786,7 @@ function Car(iConfig)
         }
         
         //玩家要求重置
-        if(!SystemGameOver)
+        if(!Config.Stay && !SystemGameOver)
         {
             if(!this.IsAi && !this.UserOnReset && CheckKeyBoardPress(UserKeyboardSetting.Reset))
             {
@@ -840,6 +850,7 @@ function Car(iConfig)
         }
 
         //加速
+        if(!Config.Stay)
         {
             //引擎超轉延遲
             if(EngineOverRunningDelayTime>0)
@@ -909,7 +920,7 @@ function Car(iConfig)
         }
 
         //玩家控制煞車或倒車
-        if(!this.IsAi && !SystemGameOver)
+        if(!Config.Stay && !this.IsAi && !SystemGameOver)
         {
         	if(KeyBoardPressArray[40] || CheckKeyBoardPress(UserKeyboardSetting.Brake))
 			{
@@ -919,6 +930,10 @@ function Car(iConfig)
 			{
                 this.UnTakeBrake();
 			}
+        }
+        else if(Config.Stay)
+        {
+            this.TakeBrake();
         }
 
         //設定煞車力度
@@ -944,7 +959,7 @@ function Car(iConfig)
         }
     
         //玩家控制轉彎
-        if(!this.IsAi && !SystemGameOver)
+        if(!Config.Stay && !this.IsAi && !SystemGameOver)
 		{
 			if(KeyBoardPressArray[39])
 	        {
@@ -961,7 +976,7 @@ function Car(iConfig)
         }
         
         //計算玩家控制所造成的輪胎轉向
-        if(!this.IsAi)
+        if(!Config.Stay && !this.IsAi)
         {
             if(Math.abs(NowSteerVal-TargetSteerVal)<Config.SteerAdd)
             {
@@ -977,7 +992,7 @@ function Car(iConfig)
             }
         }
         //計算AI轉向
-        else 
+        else
         {
             if(Math.abs(NowSteerVal-TargetSteerVal)<Config.AiSteerAdd)
             {
@@ -1054,6 +1069,16 @@ function Car(iConfig)
     	for (var i = 0,j=this.Vehicle.wheelInfos.length; i < j; i++) {
             this.Vehicle.updateWheelTransform(i);
             var t = this.Vehicle.wheelInfos[i].worldTransform;
+
+            //fix worldTransform is NaN bug
+            if(isNaN(t.quaternion.x) || isNaN(t.quaternion.y) || isNaN(t.quaternion.z) || isNaN(t.quaternion.w))
+            {
+                t.quaternion.x=0;
+                t.quaternion.y=0;
+                t.quaternion.z=0;
+                t.quaternion.w=1;
+            }
+
             var wheelBody = wheelBodies[i];
             wheelBody.position.copy(t.position);
             wheelBody.quaternion.copy(t.quaternion);
@@ -1217,7 +1242,7 @@ function Car(iConfig)
 		//if(MainFocusUnit==ThisCar)
 		{
             //遊戲結束
-            if(SystemGameOver)
+            if(ViewType==2 || SystemGameOver)
             {
                 this.Camera.position.x=Config.CameraOptions.Ended.Position.x;
                 this.Camera.position.y=Config.CameraOptions.Ended.Position.y;
@@ -1339,7 +1364,8 @@ function Car(iConfig)
     //變換視角
     this.ViewTypeChange=function(){
 
-        ViewType=(ViewType==1)?0:1;
+        ViewType++;
+        if(ViewType>=3)ViewType=0;
 
         Config.ViewTypeChangeCallBack && Config.ViewTypeChangeCallBack(ViewType,ThisCar);
     };

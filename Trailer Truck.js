@@ -6,10 +6,12 @@ var DebugTime=0;
 function TrailerTruck(iConfig)
 {
 	var Config={
+        Scene:Scene,
+        World:world,
         Mass:9000,
         EngineForce:18000*2.5,
         BrakeForce:/*150*/200*2.5,			//煞車速度
-        SteerAdd:22.5/7,                //轉向速度
+        SteerAdd:22.5/14,                //轉向速度
         SteerAddLinear:0.5,             //轉向線性化
         Gear:[							//齒輪設定
             {
@@ -30,7 +32,7 @@ function TrailerTruck(iConfig)
 			{
 				Reverse:false,
 				TargetSpeed:60.90909091,
-                TorquePer:0.75              //扭力比例
+                TorquePer:0.475              //扭力比例
 			},
 			{
 				Reverse:false,
@@ -88,7 +90,7 @@ function TrailerTruck(iConfig)
             dampingRelaxation: 2.3,
             dampingCompression: 4.4,
             maxSuspensionForce: 100000,
-            rollInfluence:  /*0.01*/0.25*1.5,
+            rollInfluence:  0.375/2,
             axleLocal: new CANNON.Vec3(0, 1, 0),
             chassisConnectionPointLocal: new CANNON.Vec3(0,0,0),
             maxSuspensionTravel: 0.0,
@@ -261,6 +263,8 @@ function TrailerTruck(iConfig)
 
     //建立貨櫃
     this.Container=new TruckContainer({
+        Scene:Config.Scene,
+        World:Config.World,
         Position:new THREE.Vector3(
             this.Body.position.x+6,
             this.Body.position.y+0,
@@ -270,8 +274,7 @@ function TrailerTruck(iConfig)
     });
 
     var ThisContainer=this.Container;
-    AllPackage.push(this.Container);
-
+    
     //設定連結的卡車
     this.Container.Truck=this;
 
@@ -281,7 +284,7 @@ function TrailerTruck(iConfig)
     //建立貨櫃約束
     this.ContainerConstraint=null;
     this.ContainerConstraint = new CANNON.PointToPointConstraint(this.Body,new CANNON.Vec3(0.5,0,0.3),this.Container.Body,new CANNON.Vec3(-5.5,0,0));
-    world.addConstraint(this.ContainerConstraint);
+    Config.World.addConstraint(this.ContainerConstraint);
 
     this.SetConstraint=function(Enable)
     {
@@ -483,7 +486,7 @@ function TrailerTruck(iConfig)
     function RunCallBack(ThisTrailerTruck)
     {
         //遠光燈
-        if(Config.HaveLight)
+        if(!Config.Stay && Config.HaveLight)
         {
             if(CheckKeyBoardPress(UserKeyboardSetting.Bright))
             {
