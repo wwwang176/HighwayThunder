@@ -1,6 +1,6 @@
 README
 ===========================
 
-#TODO
-- [ ] Select Car Dialog
+3D web racing game
 
+[[DEMO](http://wwwang.tw/HighwayThunder)]

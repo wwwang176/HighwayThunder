@@ -46,7 +46,12 @@
     "Arrow left":"方向鍵左(←)",
     "Arrow right":"方向鍵右(→)",
     "High beam":"遠光燈",
-    "Reset":"重置"
+    "Reset":"重置",
+    
+    "Speed Max":"極限速度",
+    "Acceleration":"加速性",
+    "Braking Stability":"煞車制動性",
+    "Maneuverability":"操控性"
     
     
 }

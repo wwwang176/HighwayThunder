@@ -7,6 +7,45 @@ function Sedan(iConfig)
 {
 	var Config={
         HaveLight:false,
+        EngineForce:13000,              //引擎力量
+        BrakeForce:150,                 //煞車力量
+        Gear:[							//齒輪設定
+            {
+                Reverse:true,   //倒退檔
+				TargetSpeed:50,
+                TorquePer:0.5              //扭力比例
+			},
+			{
+				Reverse:false,
+				TargetSpeed:50,
+                TorquePer:0.5              //扭力比例
+			},
+			{
+				Reverse:false,
+				TargetSpeed:90,
+                TorquePer:0.4              //扭力比例
+			},
+			{
+				Reverse:false,
+				TargetSpeed:130,
+                TorquePer:0.3              //扭力比例
+			},
+			{
+				Reverse:false,
+				TargetSpeed:170,
+                TorquePer:0.2              //扭力比例
+			},
+			{
+				Reverse:false,
+				TargetSpeed:210,
+                TorquePer:0.1              //扭力比例
+            },
+            {
+				Reverse:false,
+				TargetSpeed:250,
+                TorquePer:0.05              //扭力比例
+            }
+        ],
         OnRunCallBack:function(){},
         RunCallBack:RunCallBack,
         TakeBreak:TakeBreak,

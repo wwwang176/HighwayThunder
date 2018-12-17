@@ -29,6 +29,7 @@
     <script src="car.js?<?php echo rand(0,9999);?>"></script>
     <script src="Package.js?<?php echo rand(0,9999);?>"></script>
     
+    <script src="WEX.js?<?php echo rand(0,9999);?>"></script>
     <script src="Sedan.js?<?php echo rand(0,9999);?>"></script>
     <script src="Bus.js?<?php echo rand(0,9999);?>"></script>
     <script src="Trailer Truck.js?<?php echo rand(0,9999);?>"></script>
@@ -500,6 +501,7 @@ var AllCar=[];          //所有車輛
 var AllPackage=[];      //所有物體
 var AllFloor=[];
 var RoadTexture=null,GarageRoadTexture=null,LineTexture=null,GrassTexture=null;
+var FireTexture=[];
 var AllLane=[];
 var SmokeArray=[];
 var SmokeSetIndex=0;
@@ -540,6 +542,7 @@ var PutTrafficCone3000State=false;      //放置交通錐的狀態
 var PutTrafficCone5000State=false;      //放置交通錐的狀態
 var ScoreCheckDOM=$('#score-check');
 
+var WEXModel=[null,null,null];
 var CarModel=[null,null,null];
 var BusModel=[null,null];
 var TrailerTruckModel=null;
@@ -841,6 +844,12 @@ function LoadResource(CallBack)
 
     //讀取外部物件
     var loader = new THREE.ObjectLoader(LoadingManager);
+    loader.load("textures/WEX/model.json",function (obj){ WEXModel[0]=obj; });
+    var loader = new THREE.ObjectLoader(LoadingManager);
+    loader.load("textures/WEX/wheel.json",function (obj){ WEXModel[1]=obj; });
+    var loader = new THREE.ObjectLoader(LoadingManager);
+    loader.load("textures/WEX/wheel-other.json",function (obj){ WEXModel[2]=obj; });
+    var loader = new THREE.ObjectLoader(LoadingManager);
     loader.load("textures/car/model.json",function (obj){ CarModel[0]=obj; });
     var loader = new THREE.ObjectLoader(LoadingManager);
     loader.load("textures/car/model-L1.json",function (obj){ CarModel[1]=obj; });
@@ -885,6 +894,12 @@ function LoadResource(CallBack)
 
     BillboardTexture = new THREE.TextureLoader(LoadingManager).load("textures/Billboard.png");
     //BillboardTexture.minFilter = THREE.LinearMipMapLinearFilter;
+
+    FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire2.png"));
+    FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire3.png"));
+    FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire4.png"));
+    FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire5.png"));
+    FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire6.png"));
 }
 
 function InitGarage()
@@ -941,6 +956,29 @@ function InitGarage()
     //建構車輛
     GarageAllCar=[];
 
+    var NewCar=new WEX({
+        Ai:false,
+        CanReset:false,
+        Stay:true,
+        Scene:GarageScene,
+        World:GarageWorld,
+        HaveLight:true,
+        GarageScore:{
+            SpeedMax:0.73,
+            Acceleration:0.7,
+            Braking:0.5,
+            Maneuverability:0.62
+        },
+        Position:new THREE.Vector3(3.75/2,-8,2)
+    });
+    GarageAllCar.push(NewCar);
+    if(InGarage)
+    {
+        GarageFocusUnitIndex=0;
+        GarageFocusUnit=NewCar;
+        GarageCarChange();
+    }
+
     var NewCar=new Sedan({
         Ai:false,
         CanReset:false,
@@ -949,17 +987,14 @@ function InitGarage()
         World:GarageWorld,
         HaveLight:true,
         GarageScore:{
-            SpeedMax:0.65,
-            Acceleration:0.7,
-            Braking:0.5,
+            SpeedMax:0.467,
+            Acceleration:0.59,
+            Braking:0.53,
             Maneuverability:0.57
         },
-        Position:new THREE.Vector3(2,-5,2)
+        Position:new THREE.Vector3(2,-4,2)
     });
     GarageAllCar.push(NewCar);
-    GarageFocusUnitIndex=0;
-    GarageFocusUnit=NewCar;
-    GarageCarChange();
 
     var NewCar=new Bus({
         Ai:false,
@@ -1271,7 +1306,15 @@ function InitHighway()
     }
 
     //UserCar
-    if(GarageFocusUnit instanceof Sedan)
+    if(GarageFocusUnit instanceof WEX)
+    {
+        UserCar=new WEX({
+            HaveLight:true,
+            InitSpeed:1,
+            Position:new THREE.Vector3(0,3,4)
+        });
+    }
+    else if(GarageFocusUnit instanceof Sedan)
     {
         UserCar=new Sedan({
             HaveLight:true,
@@ -2215,6 +2258,8 @@ function SceneChange()
     cancelAnimationFrame(RequestGarageAnimationFrameContorl);
     cancelAnimationFrame(RequestHighwayAnimationFrameContorl);
     
+    $(ScoreCheckDOM).hide();
+
     if(InGarage)
     {
         $('#canvas-div').hide();

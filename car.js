@@ -158,6 +158,7 @@ function Car(iConfig)
         UnTakeBreak:function(){},
         UserResetCallBack:function(){},
         ViewTypeChangeCallBack:function(){},
+        ChangeGearCallBack:function(){},
     };
 
     Config=$.extend(Config,iConfig);
@@ -185,6 +186,7 @@ function Car(iConfig)
     var NowEngineSpeedPer=0;		//目前引擎轉速百分比
     var NowClutchPer=0;             //目前離合器百分比
     var EngineOverRunningDelayTime=0;   //引擎超轉時油門延遲
+    var UseN2O=false;               //是否使用氮氣
 
     var ThrottleUp=false;           //是否踩油門
     var TakeBrakePer=0;             //煞車量
@@ -208,7 +210,7 @@ function Car(iConfig)
     this.NowO2N2=Config.O2N2Max;    //目前氮氣量
     this.O2N2Max=Config.O2N2Max;    //氮氣最高量
 
-    var WheelMashArray=[];          //輪胎物件(three.js)
+    this.WheelMashArray=[];          //輪胎物件(three.js)
     var wheelBodies = [];           //輪胎物件(cannon.js)
     this.OnDrift=false;             //是否甩尾中
     this.OnFly=false;               //是否飛行中
@@ -293,9 +295,15 @@ function Car(iConfig)
         WheelLOD.quaternion.copy(WheelBody.quaternion);
         WheelLOD.position.copy(WheelBody.position);
 
-        WheelMashArray.push(WheelLOD);
+        this.WheelMashArray.push(WheelLOD);
         Config.Scene.add(WheelLOD);
     }
+
+    //Get Throttle State
+    this.GetThrottle=function(){ return ThrottleUp; };
+    
+    //Get UseN2O State
+    this.GetUseN2O=function(){ return UseN2O; };
 
     //更新LOD
     this.LODUpdate=function(Camera){
@@ -304,9 +312,9 @@ function Car(iConfig)
         this.LOD.update(Camera);
 
         //輪胎LOD
-        for(var i=0,j=WheelMashArray.length;i<j;i++)
+        for(var i=0,j=this.WheelMashArray.length;i<j;i++)
         {
-            WheelMashArray[i].update(Camera);
+            this.WheelMashArray[i].update(Camera);
         }
     };
 
@@ -323,10 +331,15 @@ function Car(iConfig)
         this.BestGearPer=1-(Config.Gear[NowGear].TorquePer*0.85);
         this.BestPervGearPer=0;
 
+        if(NowGear==Config.Gear.length-1)
+            this.BestGearPer=1;
+
         if(NowGear-1>=1)
             this.BestPervGearPer=1-(Config.Gear[NowGear-1].TorquePer);
 
         this.MathGearDashArray();
+
+        Config.ChangeGearCallBack && Config.ChangeGearCallBack(ThisCar);
     };
 
     //進一檔
@@ -418,8 +431,8 @@ function Car(iConfig)
     this.Show=function(){
 
         this.MeshGroup.visible=true;
-			for(var i=0,j=WheelMashArray.length;i<j;i++)
-                WheelMashArray[i].visible=true;
+			for(var i=0,j=this.WheelMashArray.length;i<j;i++)
+                this.WheelMashArray[i].visible=true;
             
         this.Body.wakeUp();
 		this.Body.collisionResponse=true;
@@ -429,8 +442,8 @@ function Car(iConfig)
     this.Hide=function(){
         
         this.MeshGroup.visible=false;
-        for(var i=0,j=WheelMashArray.length;i<j;i++)
-            WheelMashArray[i].visible=false;
+        for(var i=0,j=this.WheelMashArray.length;i<j;i++)
+            this.WheelMashArray[i].visible=false;
         
         this.Body.position.set(this.Index*100,-999999,999999);
         this.Body.sleep();
@@ -669,11 +682,10 @@ function Car(iConfig)
 
         //取得速度
     	this.Speed=this.Body.pointToLocalFrame(new CANNON.Vec3(
-                                                this.Body.position.x+ this.Body.velocity.x/30,
-                                                this.Body.position.y+ this.Body.velocity.y/30,
-                                                this.Body.position.z+ this.Body.velocity.z/30
-                                            ),new CANNON.Vec3(0,0,0));
-        
+            this.Body.position.x+ this.Body.velocity.x/30,
+            this.Body.position.y+ this.Body.velocity.y/30,
+            this.Body.position.z+ this.Body.velocity.z/30
+        ),new CANNON.Vec3(0,0,0));
 
         //取得輪胎速度
         WheelSpeedMin=99999999999999999;
@@ -693,7 +705,7 @@ function Car(iConfig)
         this.UpdateEngineSpeedPer();
 
         //是否使用氮氣
-        var UseN2O=false;
+        UseN2O=false;
         if(!Config.Stay && !this.IsAi && !SystemGameOver)
             UseN2O=CheckKeyBoardPress(UserKeyboardSetting.N2O);
 
@@ -1083,8 +1095,8 @@ function Car(iConfig)
             wheelBody.position.copy(t.position);
             wheelBody.quaternion.copy(t.quaternion);
 
-            WheelMashArray[i].position.copy(t.position);
-            WheelMashArray[i].quaternion.copy(t.quaternion);
+            this.WheelMashArray[i].position.copy(t.position);
+            this.WheelMashArray[i].quaternion.copy(t.quaternion);
         }
 
         //玩家車輛燒胎
