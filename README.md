@@ -1,10 +1,6 @@
-HighwayThunder
+README
 ===========================
 
-3D web racing game [[DEMO](http://wwwang.tw/HighwayThunder)]
+3D web racing game
 
-## Screenshot
-![Game Screenshot]("./screenshot/1.png" "Game Screenshot")
-
-## Changelog
-[CHANGELOG](./CHANGELOG.md)
+[[DEMO](http://wwwang.tw/HighwayThunder)]
