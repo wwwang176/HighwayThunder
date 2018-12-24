@@ -49,18 +49,21 @@
     <div id="canvas-div"></div>
     <div id="garage-canvas-div"></div>
     
-    <div class="dialog first-dialog">
-        <p><span class="i18n" data-text="Driving as quickly as possible!"></span></p>
-        <div class="func">
-            <div class="button">OK</div>
-        </div>
-    </div>
     <div class="dialog goto-garage-dialog has-cancel">
         <p><span class="i18n" data-text="Goto garage and give up?"></span></p>
         <div class="func">
             <div class="button">OK</div>
             <div class="cancel">Cancel</div>
         </div>
+    </div>
+
+
+    <div class="countdown">
+        <div class="text text-1"><span class="i18n" data-text="Driving as quickly as possible!"></span></div>
+        <div class="text text-2 number">3</div>
+        <div class="text text-3 number">2</div>
+        <div class="text text-4 number">1</div>
+        <div class="text text-5 number">GO!</div>
     </div>
     
 
@@ -304,7 +307,11 @@
     </div>
 
     <div id="hud" class="unselectable">
-        
+
+        <div class="keyboard-remind reset"><span class="key">R</span><span class="i18n" data-text="Reset"></span></div>
+        <div class="keyboard-remind next-gear"><span class="key">W</span><span class="i18n" data-text="Next gear"></span></div>
+        <div class="keyboard-remind perv-gear"><span class="key">S</span><span class="i18n" data-text="Perv gear"></span></div>
+            
         <div class="game-state">
             <div class="drive-percent">
                 <div class="bar">
@@ -502,6 +509,7 @@ var AllPackage=[];      //所有物體
 var AllFloor=[];
 var RoadTexture=null,GarageRoadTexture=null,LineTexture=null,GrassTexture=null;
 var FireTexture=[];
+var BlueFireTexture=[];
 var AllLane=[];
 var SmokeArray=[];
 var SmokeSetIndex=0;
@@ -547,6 +555,16 @@ var CarModel=[null,null,null];
 var BusModel=[null,null];
 var TrailerTruckModel=null;
 var TrailerTruckFOVModel=null;
+
+var ResetRemindShow=false;
+var ResetRemindTimer=0;                 //提醒玩家重置
+var ResetRemindDOM=$('#hud .keyboard-remind.reset');
+var NextGearRemindShow=false;
+var NextGearRemindTimer=0;              //提醒玩家進一檔
+var NextGearRemindDOM=$('#hud .keyboard-remind.next-gear');
+var PervGearRemindShow=false;
+var PervGearRemindTimer=0;              //提醒玩家退一檔
+var PervGearRemindDOM=$('#hud .keyboard-remind.perv-gear');
 
 var RockArray=[];
 
@@ -642,7 +660,7 @@ function initCannon(){
     solver.iterations = 7;
     solver.tolerance = 0.1;
     world.solver = new CANNON.SplitSolver(solver);
-    world.gravity.set(0,0,-9.8/2);
+    world.gravity.set(0,0,-9.8);
     world.broadphase = new CANNON.NaiveBroadphase();
 
     // Setup GarageWorld
@@ -655,7 +673,7 @@ function initCannon(){
     solver.iterations = 7;
     solver.tolerance = 0.1;
     GarageWorld.solver = new CANNON.SplitSolver(solver);
-    GarageWorld.gravity.set(0,0,-9.8/2);
+    GarageWorld.gravity.set(0,0,-9.8);
     GarageWorld.broadphase = new CANNON.NaiveBroadphase();
     
 
@@ -666,7 +684,6 @@ function initCannon(){
     wheelMaterial = new CANNON.Material("wheelMaterial");
     WallMaterial = new CANNON.Material("WallMaterial");
     CarBodyMaterial = new CANNON.Material("CarBodyMaterial");
-    CarBodyMaterial = new CANNON.Material("CarBodyMaterial");
     GrassMaterial = new CANNON.Material("GrassMaterial");
 
 
@@ -674,7 +691,7 @@ function initCannon(){
                                                             physicsMaterial,
                                                             {
                                                                 friction: 0.1, // friction coefficient
-                                                                restitution: 0.5
+                                                                restitution: 0
                                                             }  // restitution
                                                             );
     // We must add the contact materials to the world
@@ -721,7 +738,7 @@ function initCannon(){
     var CarBodyGroundContactMaterial = new CANNON.ContactMaterial(CarBodyMaterial, 
                                                                 groundMaterial, 
                                                                 {
-                                                                    friction: /*0.005*/0.1,
+                                                                    friction: /*0.005*/0.025,
                                                                     restitution: 0,
                                                                     contactEquationStiffness: /*1000*/1e7
                                                                 });
@@ -895,11 +912,19 @@ function LoadResource(CallBack)
     BillboardTexture = new THREE.TextureLoader(LoadingManager).load("textures/Billboard.png");
     //BillboardTexture.minFilter = THREE.LinearMipMapLinearFilter;
 
+    //Red Fire
     FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire2.png"));
     FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire3.png"));
     FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire4.png"));
     FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire5.png"));
     FireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire6.png"));
+    
+    //Blue Fire
+    BlueFireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire2-blue.png"));
+    BlueFireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire3-blue.png"));
+    BlueFireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire4-blue.png"));
+    BlueFireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire5-blue.png"));
+    BlueFireTexture.push(new THREE.TextureLoader(LoadingManager).load("textures/fire/fire6-blue.png"));
 }
 
 function InitGarage()
@@ -910,6 +935,8 @@ function InitGarage()
 
     //歸零
     cancelAnimationFrame(RequestGarageAnimationFrameContorl);
+    SystemGameOver=false;
+    SystemStepPer=1;
 
     //Scene
     GarageScene=new THREE.Scene();
@@ -926,7 +953,7 @@ function InitGarage()
     GarageRenderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
     //Renderer.setClearColor(0xaaccff);
     GarageRenderer.setClearColor((NightMode)?0x111111:0xaaccff);
-    GarageRenderer.setPixelRatio( window.devicePixelRatio );
+    GarageRenderer.setPixelRatio( /*window.devicePixelRatio*/1 );
     GarageRenderer.setSize( window.innerWidth, window.innerHeight );
     $('#garage-canvas-div').empty();
     $('#garage-canvas-div').append(GarageRenderer.domElement);
@@ -969,7 +996,7 @@ function InitGarage()
             Braking:0.5,
             Maneuverability:0.62
         },
-        Position:new THREE.Vector3(3.75/2,-8,2)
+        Position:new THREE.Vector3(3.75/2,-8,1)
     });
     GarageAllCar.push(NewCar);
     if(InGarage)
@@ -987,12 +1014,12 @@ function InitGarage()
         World:GarageWorld,
         HaveLight:true,
         GarageScore:{
-            SpeedMax:0.467,
+            SpeedMax:0.567,
             Acceleration:0.59,
             Braking:0.53,
             Maneuverability:0.57
         },
-        Position:new THREE.Vector3(2,-4,2)
+        Position:new THREE.Vector3(2,-4,1)
     });
     GarageAllCar.push(NewCar);
 
@@ -1009,7 +1036,7 @@ function InitGarage()
             Braking:0.3,
             Maneuverability:0.5
         },
-        Position:new THREE.Vector3(6.25,0,2)
+        Position:new THREE.Vector3(6.25,0,1)
     });
     GarageAllCar.push(NewCar);
 
@@ -1026,7 +1053,7 @@ function InitGarage()
             Braking:0.25,
             Maneuverability:0.45
         },
-        Position:new THREE.Vector3(3.6,5,2)
+        Position:new THREE.Vector3(3.6,5,1)
     });
     NewCar.SetConstraint(true);
     GarageAllCar.push(NewCar);
@@ -1145,7 +1172,7 @@ function InitHighway()
     //Renderer.setClearColor(0xaaccff);
     Renderer.setClearColor((NightMode)?0x111111:0xaaccff);
     Renderer.shadowMap.enabled=true;
-    Renderer.setPixelRatio( window.devicePixelRatio );
+    Renderer.setPixelRatio( /*window.devicePixelRatio*/1 );
     Renderer.setSize( window.innerWidth, window.innerHeight );
     $('#canvas-div').empty();
     $('#canvas-div').append(Renderer.domElement);
@@ -1310,32 +1337,40 @@ function InitHighway()
     {
         UserCar=new WEX({
             HaveLight:true,
+            HaveBackFire:true,
             InitSpeed:1,
-            Position:new THREE.Vector3(0,3,4)
+            Stay:true,
+            Position:new THREE.Vector3(0,3,2)
         });
     }
     else if(GarageFocusUnit instanceof Sedan)
     {
         UserCar=new Sedan({
             HaveLight:true,
+            HaveBackFire:true,
             InitSpeed:1,
-            Position:new THREE.Vector3(0,3,4)
+            Stay:true,
+            Position:new THREE.Vector3(0,3,2)
         });
     }
     else if(GarageFocusUnit instanceof Bus)
     {
         UserCar=new Bus({
             HaveLight:true,
+            HaveBackFire:true,
             InitSpeed:1,
-            Position:new THREE.Vector3(0,3,4)
+            Stay:true,
+            Position:new THREE.Vector3(0,3,2)
         });
     }
     else if(GarageFocusUnit instanceof TrailerTruck)
     {
         UserCar=new TrailerTruck({
             HaveLight:true,
+            HaveBackFire:true,
             InitSpeed:1,
-            Position:new THREE.Vector3(0,3,4)
+            Stay:true,
+            Position:new THREE.Vector3(0,3,3)
         });
         UserCar.SetConstraint(true);
         AllPackage.push(UserCar.Container);
@@ -1467,7 +1502,7 @@ function AnimateGarage()
         GarageMainCameraLookAtPosition.z
     );
 
-    GarageWorld.step((1/30)*SystemStepPer);
+    GarageWorld.step((1/60));
 
     for(var i=0;i<GarageAllCar.length;i++)
     {
@@ -1720,23 +1755,25 @@ function AnimateHighway()
 
 
     WorldRunClock.start();
-    world.step((1/30)*SystemStepPer);
+    world.step((1/60)*SystemStepPer);
     SystemWorldTime=WorldRunClock.getDelta()*1000;
 
+    // make sure Camera's world matrix is updated
+    MainFocusUnit.MeshGroup.updateMatrixWorld();
 
     var F=MainFocusUnit.Camera.getWorldPosition();
-    //var F=AllCar[3].Camera.getWorldPosition();
+    //var F=AllCar[0].Camera.getWorldPosition();
     MainCamera.position.x=F.x;
     MainCamera.position.y=F.y;
     MainCamera.position.z=F.z;
 
     var F=MainFocusUnit.Camera.getWorldQuaternion();
-    //var F=AllCar[3].Camera.getWorldQuaternion();
+    //var F=AllCar[0].Camera.getWorldQuaternion();
     MainCamera.quaternion.x=F.x;
     MainCamera.quaternion.y=F.y;
     MainCamera.quaternion.z=F.z;
     MainCamera.quaternion.w=F.w;
-    
+
     
 
     //if(Date.now()-SystemRenderTimePoint>(1000/SystemRenderTargetFps))
@@ -1757,7 +1794,7 @@ function AnimateHighway()
         if(MainFocusUnit!=null)
         {
             var DisplayUnit=MainFocusUnit;
-            //DisplayUnit=AllCar[3];
+            //DisplayUnit=AllCar[0];
 
             //速度
             HUDSpeedKmDiv.html(Math.round(DisplayUnit.Speed.x*-3.6*60 *((UserEnvironmentSetting.UnitofSpeed=='mph')?0.621371192237334:1) ));
@@ -1781,8 +1818,56 @@ function AnimateHighway()
             //console.log(DisplayUnit.NowGearDashArrayData);
             HUDGearBarBgDiv.css({'stroke-dasharray':DisplayUnit.AllGearDashArrayData});
             HUDGearBarDiv.css({'stroke-dasharray':DisplayUnit.NowGearDashArrayData});
+
+
+            //重置提醒
+            if(!DisplayUnit.Stay && !DisplayUnit.OnThrottleUp && Math.abs(DisplayUnit.Speed.x)<0.2)
+                ResetRemindTimer++;
+            else ResetRemindTimer=0;
+
+            if(ResetRemindTimer>60 && !ResetRemindShow)
+            {
+                ResetRemindShow=true;
+                ResetRemindDOM.addClass('show');
+            }
+            else if(ResetRemindTimer<60 && ResetRemindShow)
+            {
+                ResetRemindShow=false;
+                ResetRemindDOM.removeClass('show');
+            }
             
-            
+            //進一檔提醒
+            if(!ResetRemindShow && !DisplayUnit.Stay && !DisplayUnit.OnFly && HUDLastPRMPer>=DisplayUnit.BestGearPer)
+                NextGearRemindTimer++;
+            else NextGearRemindTimer=0;
+
+            if(NextGearRemindTimer>=60 && !NextGearRemindShow)
+            {
+                NextGearRemindShow=true;
+                NextGearRemindDOM.addClass('show');
+            }
+            else if(NextGearRemindTimer<60 && NextGearRemindShow)
+            {
+                NextGearRemindShow=false;
+                NextGearRemindDOM.removeClass('show');
+            }
+
+            //退一檔提示
+            if(!ResetRemindShow && !DisplayUnit.Stay && !DisplayUnit.OnFly && !DisplayUnit.OnTakeBrake && HUDLastPRMPer<=DisplayUnit.BestPervGearPer)
+                PervGearRemindTimer++;
+            else PervGearRemindTimer=0;
+
+            if(PervGearRemindTimer>=60 && !PervGearRemindShow)
+            {
+                PervGearRemindShow=true;
+                PervGearRemindDOM.addClass('show');
+            }
+            else if(PervGearRemindTimer<60 && PervGearRemindShow)
+            {
+                PervGearRemindShow=false;
+                PervGearRemindDOM.removeClass('show');
+            }
+
         }
 
         //更新路程資訊
@@ -1812,23 +1897,23 @@ function AnimateHighway()
                 //逆向
                 if(MainFocusUnit.Body.position.y<-3)
                 {
-                    UserWrongWayDriveScore.Add(0.1*MainFocusUnit.Speed.length()*UserSpeedBonusPer);
+                    UserWrongWayDriveScore.Add(0.25*MainFocusUnit.Speed.length()*UserSpeedBonusPer);
                     UserWrongWayDriveScore.Count+=MainFocusUnit.MoveDiff.length();
-                    UserTotalScore+=0.1*MainFocusUnit.Speed.length()*UserSpeedBonusPer;
+                    UserTotalScore+=0.25*MainFocusUnit.Speed.length()*UserSpeedBonusPer;
                 }
                 //甩尾
                 if(MainFocusUnit.OnDrift)
                 {
-                    UserDriftScore.Add(0.5*MainFocusUnit.Speed.length()*UserSpeedBonusPer);
+                    UserDriftScore.Add(1*MainFocusUnit.Speed.length()*UserSpeedBonusPer);
                     UserDriftScore.Count+=MainFocusUnit.MoveDiff.length();
-                    UserTotalScore+=0.5*MainFocusUnit.Speed.length()*UserSpeedBonusPer;
+                    UserTotalScore+=1*MainFocusUnit.Speed.length()*UserSpeedBonusPer;
                 }
                 //飛行
                 if(MainFocusUnit.OnFly)
                 {
-                    UserFlyScore.Add(2*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer);
+                    UserFlyScore.Add(4*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer);
                     UserFlyScore.Count+=MainFocusUnit.MoveDiff.length();
-                    UserTotalScore+=2*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer;
+                    UserTotalScore+=4*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer;
                 }
 
                 //擦身而過
@@ -1871,9 +1956,9 @@ function AnimateHighway()
                             Delay:100
                         });
 
-                        UserCloseDriveScore.Add(5*UserSpeedBonusPer);
+                        UserCloseDriveScore.Add(10*UserSpeedBonusPer);
                         UserCloseDriveScore.Count++;
-                        UserTotalScore+=5*UserSpeedBonusPer;
+                        UserTotalScore+=10*UserSpeedBonusPer;
                     }
                 }
             }
@@ -1891,7 +1976,7 @@ function AnimateHighway()
                     if(Math.abs(MainFocusUnit.Speed.x)*60*3.6>=120)
                     {
                         UserSafetyCameraScore[i].Add(1000*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer);
-                        UserTotalScore+=1000*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer;
+                        UserTotalScore+=900*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer;
                         
                         SafetyCameraFlashDOMShow=true;
                         SafetyCameraFlashDOM.show();
@@ -2226,6 +2311,52 @@ $('.goto-garage-dialog .button').on('click',function(){
     },1000);
 });
 
+var InCountDown=true;
+function StopCountDown()
+{
+    InCountDown=false;
+    $('.countdown').hide();
+}
+function StartCountDown(CallBack)
+{
+    InCountDown=true;
+
+    var CountDownObj=$('.countdown');
+    CountDownObj.show();
+
+    CountDownEffect(CountDownObj.find('.text-1'),300,800);
+    
+    setTimeout(function(){
+        CountDownEffect(CountDownObj.find('.text-2'),300,500);
+    },1100);
+    setTimeout(function(){
+        CountDownEffect(CountDownObj.find('.text-3'),300,500);
+    },1100+800);
+    setTimeout(function(){
+        CountDownEffect(CountDownObj.find('.text-4'),300,500);
+    },1100+800*2);
+    setTimeout(function(){
+        CountDownEffect(CountDownObj.find('.text-5'),300,500);
+        if(InCountDown) CallBack && CallBack();
+    },1100+800*3);
+}
+function CountDownEffect(Obj,RunTime=300,WaitTime=800)
+{   
+    Obj.show().addClass('animate-1');
+
+    setTimeout(function(){
+        Obj.removeClass('animate-1').addClass('animate-2');
+    },RunTime);
+    
+    setTimeout(function(){
+        Obj.removeClass('animate-2').addClass('animate-3');
+    },WaitTime+RunTime);
+
+    setTimeout(function(){
+        Obj.removeClass('animate-3');
+    },WaitTime+RunTime+RunTime);
+}
+
 function GarageNextCar()
 {
     GarageFocusUnitIndex++;
@@ -2265,7 +2396,7 @@ function SceneChange()
         $('#canvas-div').hide();
         $('#garage-canvas-div').show();
         $('#garage-select-car-div').show();
-        $('.first-dialog').hide();
+        StopCountDown();
         AnimateGarage();
     }
     else
@@ -2273,7 +2404,9 @@ function SceneChange()
         $('#canvas-div').show();
         $('#garage-canvas-div').hide();
         $('#garage-select-car-div').hide();
-        $('.first-dialog').show();
+        StartCountDown(function(){
+            MainFocusUnit.Stay=false;
+        });
         AnimateHighway();
     }
 }

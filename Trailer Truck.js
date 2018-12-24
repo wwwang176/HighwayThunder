@@ -5,13 +5,14 @@ var DebugTime=0;
 
 function TrailerTruck(iConfig)
 {
+    var MassOffset=new THREE.Vector3(0,0,0.25);
 	var Config={
         Scene:Scene,
         World:world,
         Mass:9000,
-        EngineForce:18000*2.5,
-        BrakeForce:/*150*/200*2.5,			//煞車速度
-        SteerAdd:22.5/14,                //轉向速度
+        EngineForce:18000*7,
+        BrakeForce:1000,			    //煞車速度
+        SteerAdd:22.5/14*2,               //轉向速度
         SteerAddLinear:0.5,             //轉向線性化
         Gear:[							//齒輪設定
             {
@@ -22,71 +23,71 @@ function TrailerTruck(iConfig)
             {
 				Reverse:false,
 				TargetSpeed:30,
-                TorquePer:0.5              //扭力比例
+                TorquePer:0.55              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:45.45454545,
-                TorquePer:0.5              //扭力比例
+                TorquePer:0.55              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:60.90909091,
-                TorquePer:0.475              //扭力比例
+                TorquePer:0.525              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:76.36363636,
-                TorquePer:0.45              //扭力比例
+                TorquePer:0.5              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:91.81818182,
-                TorquePer:0.425              //扭力比例
+                TorquePer:0.475              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:107.2727273,
-                TorquePer:0.4              //扭力比例
+                TorquePer:0.45              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:122.7272727,
-                TorquePer:0.375              //扭力比例
+                TorquePer:0.425              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:138.1818182,
-                TorquePer:0.35              //扭力比例
+                TorquePer:0.4              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:153.6363636,
-                TorquePer:0.325              //扭力比例
+                TorquePer:0.375              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:169.0909091,
-                TorquePer:0.3              //扭力比例
+                TorquePer:0.35              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:184.5454545,
-                TorquePer:0.25              //扭力比例
+                TorquePer:0.3              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:200,
-                TorquePer:0.2              //扭力比例
+                TorquePer:0.25              //扭力比例
             }
         ],
         WheelOptions:{
             radius: 0.55 ,
             directionLocal: new CANNON.Vec3(0, 0, -1),
-            suspensionStiffness: 30/2,
+            suspensionStiffness: 30,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
-            frictionSlip: 3*0.9*0.7*0.7/**1.5*/,
+            frictionSlip: 3*0.9*0.7*0.7*2,
             dampingRelaxation: 2.3,
             dampingCompression: 4.4,
             maxSuspensionForce: 100000,
@@ -94,7 +95,7 @@ function TrailerTruck(iConfig)
             axleLocal: new CANNON.Vec3(0, 1, 0),
             chassisConnectionPointLocal: new CANNON.Vec3(0,0,0),
             maxSuspensionTravel: 0.0,
-            customSlidingRotationalSpeed: -(60/2.1384),  //輪胎沒阻力的時候最高轉速
+            customSlidingRotationalSpeed: -60,  //輪胎沒阻力的時候最高轉速
             useCustomSlidingRotationalSpeed: true
         },
         Wheel:[
@@ -117,20 +118,20 @@ function TrailerTruck(iConfig)
                 LastCarTrackPosition:new THREE.Vector3()
             },
             /*{
-                Power:false,
+                Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(1.2,-2.495/2+0.1,-1.6+1.2),
-                suspensionRestLength:0.7,
-                maxSuspensionTravel:0.7,
+                Position:new THREE.Vector3(1.2,-2.495/2+0.1,-1.6+0.7),
+                suspensionRestLength:0.4,
+                maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             },
             {
-                Power:false,
+                Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(1.2,2.495/2-0.1,-1.6+1.2),
-                suspensionRestLength:0.7,
-                maxSuspensionTravel:0.7,
+                Position:new THREE.Vector3(1.2,2.495/2-0.1,-1.6+0.7),
+                suspensionRestLength:0.4,
+                maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             },*/
@@ -156,36 +157,30 @@ function TrailerTruck(iConfig)
         CameraOptions:{
             Default:{
                 Position:new THREE.Vector3(0,6,13+8),
-                SpeedAdd:2,
-                SpeedPer:0.2
+                SpeedAdd:new THREE.Vector3(0,0.5,0.5),
+                SpeedPer:new THREE.Vector3(0,1,1),
+                RotationEffect:0.15
             },
             LookBack:{
-                Position:new THREE.Vector3(0,4,-18),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(0,4,18)
             },
             LookLeft:{
-                Position:new THREE.Vector3(10,4,0),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(-3,4,10)
             },
             LookRight:{
-                Position:new THREE.Vector3(-10,4,0),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(3,4,10)
             },
             FOV:{
-                Position:new THREE.Vector3(-0.5,1.2,-2.5),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(-0.6,1.2,-2.2),
+                SpeedAdd:new THREE.Vector3(0,0,0.8),
+                SpeedPer:new THREE.Vector3(1,1,0),
+                RotationEffect:0.15
             },
             Ended:{
-                Position:new THREE.Vector3(2,0.5,-8),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(2,0.5,-8)
             },
         },
-        AiResetZOffset:2,
+        AiResetZOffset:0.75,
         AiTargetLaneYOffsetMax:0,
         Ready2ResetCallBack:Ready2ResetCallBack,
         ResetCallBack:ResetCallBack,
@@ -198,6 +193,38 @@ function TrailerTruck(iConfig)
     };
 
     Config=$.extend(Config,iConfig);
+
+    //質量偏移
+    Config.CameraOptions.Default.Position.x+=MassOffset.y;
+    Config.CameraOptions.Default.Position.y+=MassOffset.z;
+    Config.CameraOptions.Default.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.LookBack.Position.x+=MassOffset.y;
+    Config.CameraOptions.LookBack.Position.y+=MassOffset.z;
+    Config.CameraOptions.LookBack.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.LookLeft.Position.x+=MassOffset.y;
+    Config.CameraOptions.LookLeft.Position.y+=MassOffset.z;
+    Config.CameraOptions.LookLeft.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.LookRight.Position.x+=MassOffset.y;
+    Config.CameraOptions.LookRight.Position.y+=MassOffset.z;
+    Config.CameraOptions.LookRight.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.FOV.Position.x+=MassOffset.y;
+    Config.CameraOptions.FOV.Position.y+=MassOffset.z;
+    Config.CameraOptions.FOV.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.Ended.Position.x+=MassOffset.y;
+    Config.CameraOptions.Ended.Position.y+=MassOffset.z;
+    Config.CameraOptions.Ended.Position.z+=MassOffset.x;
+    
+    for(var i=0;i<Config.Wheel.length;i++)
+    {
+        Config.Wheel[i].Position.x+=MassOffset.x;
+        Config.Wheel[i].Position.y+=MassOffset.y;
+        Config.Wheel[i].Position.z+=MassOffset.z;
+    }
 
     //繼承Car
     this.prototype=Object.create(Car.prototype);
@@ -224,9 +251,9 @@ function TrailerTruck(iConfig)
     var CarFOVModelGroup=new THREE.Group();
     CarFOVModelGroup.add(DeepClone(TrailerTruckFOVModel));
     CarFOVModelGroup.rotation.x=90*Math.PI/180;
-    CarFOVModelGroup.position.x=-6.8/2;
-    CarFOVModelGroup.position.y=-2.5/2;
-    CarFOVModelGroup.position.z=-1;
+    CarFOVModelGroup.position.x=-6.8/2+MassOffset.x;
+    CarFOVModelGroup.position.y=-2.5/2+MassOffset.y;
+    CarFOVModelGroup.position.z=-1+MassOffset.z;
     CarFOVModelGroup.visible=false;
     this.MeshGroup.add(CarFOVModelGroup);
     
@@ -254,12 +281,14 @@ function TrailerTruck(iConfig)
     CarModelL1Group.add(cube);
     this.LOD.addLevel(CarModelL1Group,200);
 
+    this.LOD.position.set(MassOffset.x,MassOffset.y,MassOffset.z);
+
 	this.Body.userData={
 		Index:this.Index
 	};
 
-    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(2/2,2.5/2,2.8/2)),new CANNON.Vec3(-2.4,0,0.4));
-    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(5.6/2,2.5/2,1/2)),new CANNON.Vec3(0.25,0,-0.5));
+    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(2/2,2.5/2,2.8/2)),new CANNON.Vec3(-2.4+MassOffset.x,0+MassOffset.y,0.4+MassOffset.z));
+    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(5.6/2,2.5/2,1/2)),new CANNON.Vec3(0.25+MassOffset.x,0+MassOffset.y,-0.5+MassOffset.z));
 
     //建立貨櫃
     this.Container=new TruckContainer({
@@ -268,7 +297,7 @@ function TrailerTruck(iConfig)
         Position:new THREE.Vector3(
             this.Body.position.x+6,
             this.Body.position.y+0,
-            this.Body.position.z+0.5
+            this.Body.position.z+0.5-1.25
         ),
         CanReset:this.NeedReset,
     });
@@ -283,7 +312,12 @@ function TrailerTruck(iConfig)
 
     //建立貨櫃約束
     this.ContainerConstraint=null;
-    this.ContainerConstraint = new CANNON.PointToPointConstraint(this.Body,new CANNON.Vec3(0.5,0,0.3),this.Container.Body,new CANNON.Vec3(-5.5,0,0));
+    this.ContainerConstraint = new CANNON.PointToPointConstraint(
+        this.Body,
+        new CANNON.Vec3(0.5+MassOffset.x,0+MassOffset.y,0.15+MassOffset.z),
+        this.Container.Body,
+        new CANNON.Vec3(-5.5,0,1)
+    );
     Config.World.addConstraint(this.ContainerConstraint);
 
     this.SetConstraint=function(Enable)
@@ -322,7 +356,7 @@ function TrailerTruck(iConfig)
         depthTest: true
     });
     var FRLight = new THREE.Sprite( material );
-    FRLight.position.set(-3.405,1,-0.55);
+    FRLight.position.set(-3.405+MassOffset.x,1+MassOffset.y,-0.55+MassOffset.z);
     FRLight.scale.set(5,5,5);
     this.MeshGroup.add(FRLight);
 
@@ -335,7 +369,7 @@ function TrailerTruck(iConfig)
         depthTest: true
     });
     var FLLight = new THREE.Sprite( material );
-    FLLight.position.set(-3.405,-1,-0.55);
+    FLLight.position.set(-3.405+MassOffset.x,-1+MassOffset.y,-0.55+MassOffset.z);
     FLLight.scale.set(5,5,5);
     this.MeshGroup.add(FLLight);
 
@@ -349,7 +383,7 @@ function TrailerTruck(iConfig)
         depthTest: true
     });
     var FRSignalLight = new THREE.Sprite( material );
-    FRSignalLight.position.set(-3.405,1.2,-0.55);
+    FRSignalLight.position.set(-3.405+MassOffset.x,1.2+MassOffset.y,-0.55+MassOffset.z);
     FRSignalLight.scale.set(3,3,3);
     FRSignalLight.visible=false;
     this.MeshGroup.add(FRSignalLight);
@@ -363,7 +397,7 @@ function TrailerTruck(iConfig)
         depthTest: true
     });
     var FLSignalLight = new THREE.Sprite( material );
-    FLSignalLight.position.set(-3.405,-1.2,-0.55);
+    FLSignalLight.position.set(-3.405+MassOffset.x,-1.2+MassOffset.y,-0.55+MassOffset.z);
     FLSignalLight.scale.set(3,3,3);
     FLSignalLight.visible=false;
     this.MeshGroup.add(FLSignalLight);
@@ -372,7 +406,7 @@ function TrailerTruck(iConfig)
     if(Config.HaveLight)
     {
         var LeftSpotLight = new THREE.SpotLight(0xffffff, 1, 30, Math.PI/4, 0.3);
-        LeftSpotLight.position.set(-3.4,-1,-0.55);
+        LeftSpotLight.position.set(-3.4+MassOffset.x,-1+MassOffset.y,-0.55+MassOffset.z);
         this.MeshGroup.add( LeftSpotLight );
 
         var TargetObj=new THREE.Object3D();
@@ -381,11 +415,11 @@ function TrailerTruck(iConfig)
         LeftSpotLight.target=TargetObj;
         
         var RightSpotLight = new THREE.SpotLight(0xffffff, 1, 30, Math.PI/4, 0.3);
-        RightSpotLight.position.set(-3.4,1,-0.55);
+        RightSpotLight.position.set(-3.4+MassOffset.x,1+MassOffset.y,-0.55+MassOffset.z);
         this.MeshGroup.add( RightSpotLight );
 
         var TargetObj=new THREE.Object3D();
-        TargetObj.position.set(-5,1,-0.55);
+        TargetObj.position.set(-5+MassOffset.x,1+MassOffset.y,-0.55+MassOffset.z);
         this.MeshGroup.add( TargetObj );
         RightSpotLight.target=TargetObj;
     }
@@ -448,11 +482,11 @@ function TrailerTruck(iConfig)
 
         if(this.Container)
         {
-            var WorldPosition=this.Body.pointToWorldFrame(new CANNON.Vec3(6,0,0.5),new CANNON.Vec3(0,0,0));
+            var WorldPosition=this.Body.pointToWorldFrame(new CANNON.Vec3(6,0,0.5-1.25),new CANNON.Vec3(0,0,0));
 
-            this.Container.Body.position.x=WorldPosition.x;
-            this.Container.Body.position.y=WorldPosition.y;
-            this.Container.Body.position.z=WorldPosition.z;
+            this.Container.Body.position.x=WorldPosition.x+MassOffset.x;
+            this.Container.Body.position.y=WorldPosition.y+MassOffset.y;
+            this.Container.Body.position.z=WorldPosition.z+MassOffset.z;
             this.Container.Body.quaternion.set(this.Body.quaternion.x,this.Body.quaternion.y,this.Body.quaternion.z,this.Body.quaternion.w);
             this.Container.Body.velocity.x=this.Body.velocity.x*1;
         }
@@ -486,7 +520,7 @@ function TrailerTruck(iConfig)
     function RunCallBack(ThisTrailerTruck)
     {
         //遠光燈
-        if(!Config.Stay && Config.HaveLight)
+        if(!ThisTrailerTruck.Stay && Config.HaveLight)
         {
             if(CheckKeyBoardPress(UserKeyboardSetting.Bright))
             {
@@ -582,7 +616,7 @@ function TrailerTruck(iConfig)
 
         var relativeVelocity=e.contact.getImpactVelocityAlongNormal();
 
-        if(Math.abs(relativeVelocity)>1)
+        if(Math.abs(relativeVelocity)>1 && e.body!=ThisContainer.Body)
         {
             for(var i=0;i<SparkArray.length;i++)
             {

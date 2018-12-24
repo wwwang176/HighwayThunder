@@ -7,7 +7,7 @@ function Car(iConfig)
         Mass:2000,                      //質量
         EngineForce:18000,              //引擎力量
         BrakeForce:200,                 //煞車力量
-		HaveO2N2:true,					//氮氣
+        HaveO2N2:true,					//氮氣
         SteerMax:45,                    //轉向最大角度
         SteerAdd:22.5/2,                //轉向速度
         SteerAddLinear:0.5,             //轉向線性化
@@ -55,18 +55,18 @@ function Car(iConfig)
         WheelOptions:{
             radius: 0.28 ,
             directionLocal: new CANNON.Vec3(0, 0, -1),
-            suspensionStiffness: 30/4*2,
+            suspensionStiffness: 30,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
-            frictionSlip: 3*0.9*0.7*0.7/**1.5*/,
-            dampingRelaxation: 2.3/3,
-            dampingCompression: 4.4/3,
+            frictionSlip: 3*0.9*0.7*0.7*1.8/**1.5*/,
+            dampingRelaxation: 2.3/3*1.5,
+            dampingCompression: 4.4/3*1.5,
             maxSuspensionForce: 100000,
             rollInfluence:  /*0.01*/0.375,
             axleLocal: new CANNON.Vec3(0, 1, 0),
             chassisConnectionPointLocal: new CANNON.Vec3(0,0,0),
             maxSuspensionTravel: 0.0,
-            customSlidingRotationalSpeed: -(60/2.1384),  //輪胎沒阻力的時候最高轉速
+            customSlidingRotationalSpeed: -60,  //輪胎沒阻力的時候最高轉速
             useCustomSlidingRotationalSpeed: true
         },
 		Wheel:[
@@ -115,37 +115,31 @@ function Car(iConfig)
         AiTargetLaneYOffsetMax:2,          //習慣偏移最大量
 		InitSpeed:0,
 		LinearDamping:0.01,
-        AngularDamping:0.5,
+        AngularDamping:0.3,
         CameraOptions:{
             Default:{
-                Position:new THREE.Vector3(0,2,5),  //+右-左，+上-下，+後-前
-                SpeedAdd:0.5,
-                SpeedPer:0.2
+                Position:new THREE.Vector3(10,5,2),     //+右-左，+上-下，+後-前
+                SpeedAdd:new THREE.Vector3(0,0,0.5),    //速度影響，0~1，數字越大鏡頭位置阻尼越大
+                SpeedPer:new THREE.Vector3(0,0,1),      //速度加成倍率
+                RotationEffect:0.85                     //轉向影響，0~1，數字越小鏡頭旋轉越鎖定
             },
             LookBack:{
-                Position:new THREE.Vector3(0,2,-10),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(0,2,10)
             },
             LookLeft:{
-                Position:new THREE.Vector3(5,2,0),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(5,2,0)
             },
             LookRight:{
-                Position:new THREE.Vector3(-5,2,0),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(-5,2,0)
             },
             FOV:{
                 Position:new THREE.Vector3(0,0.8,-1),
-                SpeedAdd:0,
-                SpeedPer:0
+                SpeedAdd:new THREE.Vector3(0,0,0.8),
+                SpeedPer:new THREE.Vector3(0,0,0),
+                RotationEffect:0
             },
             Ended:{
-                Position:new THREE.Vector3(1.25,0.5,-4.5),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(1.25,0.5,-4.5)
             },
         },
         OnReady2ResetCallBack:function(){},
@@ -175,20 +169,28 @@ function Car(iConfig)
     this.NeedReset=Config.CanReset; //是否需要回到重置池
     this.IsAi=Config.Ai;            //是否是AI
     this.AiAbide=true;              //是否守法
+    var KeyUserOnReset=false;       //玩家按下重置
     this.UserOnReset=false;         //玩家要求重置中
     this.UserOnResetTime=0;         //玩家要求重置延遲
+    this.Stay=Config.Stay;          //是否不能動
 
     this.Speed=new CANNON.Vec3();   //車輛速度
+    this.SpeedLength=0;             //移動向量距離
+    this.MoveAngle=0;               //車輛移動角度
 
     var NowGear=0;                  //目前檔位
     this.BestGearPer=0;             //最佳升檔轉速百分比
     this.BestPervGearPer=0;         //最佳降檔轉速百分比
     var NowEngineSpeedPer=0;		//目前引擎轉速百分比
     var NowClutchPer=0;             //目前離合器百分比
+    this.EngineOverRunning=false;   //引擎是否超轉中
     var EngineOverRunningDelayTime=0;   //引擎超轉時油門延遲
     var UseN2O=false;               //是否使用氮氣
 
+    this.OnThrottleUp=false;        //是否踩油門
     var ThrottleUp=false;           //是否踩油門
+    var LastThrottleState=false;    //上次油門狀態
+    this.OnTakeBrake=false;         //是否踩煞車
     var TakeBrakePer=0;             //煞車量
 
     var TargetSteerVal=0;           //目標輪胎轉向
@@ -200,9 +202,19 @@ function Car(iConfig)
     var AutoGearDelayTime=0;
     var AutoGearDelayTimeMax=60;	//自動換檔延遲時間
     var KeyNextGear=false;          //玩家按下進檔
+    var HadKeyNextGear=false;      //玩家曾經按下進檔
     var KeyPervGear=false;          //玩家按下退檔
+    var HadKeyPervGear=false;      //玩家曾經按下退檔
     var ViewType=0;                 //視角
     var KeyChangeViewType=false;    //玩家按下更換視角
+    var HadKeyChangeViewType=false; //玩家曾經按下更換視角
+    var KeyLookBack=false;          //玩家看後方
+    var LastKeyLookBackState=false; //玩家上次看後方的狀態
+    var KeyLookLeft=false;          //玩家看左方
+    var LastKeyLookLeftState=false; //玩家上次看左方的狀態
+    var KeyLookRight=false;         //玩家看右方
+    var LastKeyLookRightState=false;//玩家上次看右方的狀態
+    var FOVSpeedAdd=new THREE.Vector3(); //FOV暫存
 
     var WheelSpeedMin=0;            //動力輪胎最低速度
     var WheelSpeedMax=0;            //動力輪胎最高速度
@@ -210,6 +222,7 @@ function Car(iConfig)
     this.NowO2N2=Config.O2N2Max;    //目前氮氣量
     this.O2N2Max=Config.O2N2Max;    //氮氣最高量
 
+    var FrictionSlipMax=Config.WheelOptions.frictionSlip*1; //最大摩擦力
     this.WheelMashArray=[];          //輪胎物件(three.js)
     var wheelBodies = [];           //輪胎物件(cannon.js)
     this.OnDrift=false;             //是否甩尾中
@@ -221,17 +234,31 @@ function Car(iConfig)
     this.LOD=new THREE.LOD();
     this.MeshGroup.add(this.LOD);
 
+    var ShowBackFireTime=0;         //顯示火焰時間
+    var ShowBackFireTimeMax=5;      //顯示火焰最大時間
+    this.OnBackFireVisible=false;   //是否正在顯示火焰
+    this.OnBackBlueFireVisible=false;   //是否正在顯示氮氣火焰
+    this.BackFireGroup=new THREE.Group();       //排氣管火焰
+    this.BackBlueFireGroup=new THREE.Group();   //排氣管氮氣火焰
+    this.MeshGroup.add(this.BackFireGroup);
+    this.MeshGroup.add(this.BackBlueFireGroup);
+
     this.Camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.5,500);
     this.Camera.up=new THREE.Vector3(0,0,1);
     this.Camera.position.set(0,2,6);
-    //this.Camera.position.set(0,3,-530);
+    //this.MeshGroup.add(this.Camera);
 
-    this.CameraGroup=new THREE.Group();
-    this.CameraGroup.rotation.x=90*Math.PI/180;
-    this.CameraGroup.rotation.y=90*Math.PI/180;
-    this.CameraGroup.rotation.z=0*Math.PI/180;
-    this.CameraGroup.add(this.Camera);
-    this.MeshGroup.add(this.CameraGroup);
+    this.CameraCorrectionGroup=new THREE.Group();
+    this.CameraCorrectionGroup.rotation.x=90*Math.PI/180;
+    this.CameraCorrectionGroup.rotation.y=90*Math.PI/180;
+    this.CameraCorrectionGroup.rotation.z=0*Math.PI/180;
+
+    this.CameraRotateGruop=new THREE.Group();
+    this.CameraRotateGruop.add(this.Camera);
+    this.CameraCorrectionGroup.add(this.CameraRotateGruop);
+    this.MeshGroup.add(this.CameraCorrectionGroup);
+
+    var CamreaDefaultRotation=0;        //鏡頭左右旋轉量
     
     //建立鋼體
     this.Body=new CANNON.Body({
@@ -298,9 +325,6 @@ function Car(iConfig)
         this.WheelMashArray.push(WheelLOD);
         Config.Scene.add(WheelLOD);
     }
-
-    //Get Throttle State
-    this.GetThrottle=function(){ return ThrottleUp; };
     
     //Get UseN2O State
     this.GetUseN2O=function(){ return UseN2O; };
@@ -325,7 +349,7 @@ function Car(iConfig)
     this.ChangeGear=function(){
 
         for (var i = 0,j=this.Vehicle.wheelInfos.length; i < j; i++) {
-            this.Vehicle.wheelInfos[i].customSlidingRotationalSpeed= -(Config.Gear[NowGear].TargetSpeed/2.1384);
+            this.Vehicle.wheelInfos[i].customSlidingRotationalSpeed= -(Config.Gear[NowGear].TargetSpeed);
         }
 
         this.BestGearPer=1-(Config.Gear[NowGear].TorquePer*0.85);
@@ -347,6 +371,10 @@ function Car(iConfig)
 
     	if(NowGear+1<Config.Gear.length)
     	{
+            //消除提醒
+            if(ThisCar==MainFocusUnit)
+                NextGearRemindTimer=0;
+
     		NowGear++;
     		this.ChangeGear();
     	}
@@ -357,6 +385,10 @@ function Car(iConfig)
 
     	if(NowGear>0)
     	{
+            //消除提醒
+            if(ThisCar==MainFocusUnit)
+                PervGearRemindTimer=0;
+
     		NowGear--;
     		this.ChangeGear();
     	}
@@ -493,7 +525,7 @@ function Car(iConfig)
 			{
 				this.Body.position.set(-SystemGameSize,TargetLane.Position.y+(RandF(0.5)-0.25),1+Config.AiResetZOffset);
 				this.Body.quaternion.set(0,0,0,1);
-				this.Body.velocity.x=-this.AiTargetSpeed*30/60/3.6;
+				this.Body.velocity.x=-this.AiTargetSpeed*60/60/3.6;
 				this.Body.velocity.y=0;
 				this.Body.velocity.z=0;
 
@@ -505,7 +537,7 @@ function Car(iConfig)
 			{
 				this.Body.position.set(SystemGameSize,TargetLane.Position.y+(RandF(0.5)-0.25),1+Config.AiResetZOffset);
 				this.Body.quaternion.set(0,0,0,1);
-				this.Body.velocity.x=-this.AiTargetSpeed*30/60/3.6;
+				this.Body.velocity.x=-this.AiTargetSpeed*60/60/3.6;
 				this.Body.velocity.y=0;
 				this.Body.velocity.z=0;
 
@@ -516,7 +548,7 @@ function Car(iConfig)
 			{
 				this.Body.position.set(-SystemGameSize,TargetLane.Position.y+(RandF(0.5)-0.25),1+Config.AiResetZOffset);
 				//this.Body.quaternion.set(0,0,0,1);
-				this.Body.velocity.x=this.AiTargetSpeed*30/60/3.6;
+				this.Body.velocity.x=this.AiTargetSpeed*60/60/3.6;
 				this.Body.velocity.y=0;
 				this.Body.velocity.z=0;
 				this.Body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1),Math.PI);
@@ -527,7 +559,7 @@ function Car(iConfig)
 			{
 				this.Body.position.set(SystemGameSize,TargetLane.Position.y+(RandF(0.5)-0.25),1+Config.AiResetZOffset);
 				//this.Body.quaternion.set(0,0,0,1);
-				this.Body.velocity.x=this.AiTargetSpeed*30/60/3.6;
+				this.Body.velocity.x=this.AiTargetSpeed*60/60/3.6;
 				this.Body.velocity.y=0;
 				this.Body.velocity.z=0;
 				this.Body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1),Math.PI);
@@ -566,6 +598,10 @@ function Car(iConfig)
 
     //玩家要求重置
     this.UserReset=function(){
+
+        //消除提醒
+        if(ThisCar==MainFocusUnit)
+            ResetRemindTimer=0;
         
         this.UserOnReset=true;
         this.Body.position.setZero();
@@ -630,14 +666,23 @@ function Car(iConfig)
 
         NowClutchPer=0;
 
-        //輪胎轉速換算
-        var Ratio = (WheelSpeedMax)*((Config.Gear[NowGear].Reverse)?-1:1) / (Config.Gear[NowGear].TargetSpeed);
+        //引擎超轉
+        if(this.EngineOverRunning)
+        {
+            NowEngineSpeedPer=1;
+        }
+        //沒有超轉
+        else
+        {
+            //輪胎轉速換算
+            var Ratio = (WheelSpeedMax)*((Config.Gear[NowGear].Reverse)?-1:1) / (Config.Gear[NowGear].TargetSpeed);
 
-        //引擎轉速加權
-        NowEngineSpeedPer=NowEngineSpeedPer*(NowClutchPer) +Ratio*(1-NowClutchPer);
+            //引擎轉速加權
+            NowEngineSpeedPer=NowEngineSpeedPer*(NowClutchPer) +Ratio*(1-NowClutchPer);
 
-        if(NowEngineSpeedPer>1)NowEngineSpeedPer=1;
-        else if(NowEngineSpeedPer<0)NowEngineSpeedPer=0;
+            if(NowEngineSpeedPer>1)NowEngineSpeedPer=1;
+            else if(NowEngineSpeedPer<0)NowEngineSpeedPer=0;
+        }
 
         //超轉則震動
         if(NowEngineSpeedPer>=0.98)
@@ -682,10 +727,16 @@ function Car(iConfig)
 
         //取得速度
     	this.Speed=this.Body.pointToLocalFrame(new CANNON.Vec3(
-            this.Body.position.x+ this.Body.velocity.x/30,
-            this.Body.position.y+ this.Body.velocity.y/30,
-            this.Body.position.z+ this.Body.velocity.z/30
+            this.Body.position.x+ this.Body.velocity.x/60,
+            this.Body.position.y+ this.Body.velocity.y/60,
+            this.Body.position.z+ this.Body.velocity.z/60
         ),new CANNON.Vec3(0,0,0));
+
+        //移動向量距離
+        this.SpeedLength=this.Speed.length();
+
+        //取得移動角度
+        this.MoveAngle=Angle3(this.Speed.x,0,0,0,this.Speed.x,this.Speed.y) * ((this.Speed.y<0)?1:-1);
 
         //取得輪胎速度
         WheelSpeedMin=99999999999999999;
@@ -706,7 +757,7 @@ function Car(iConfig)
 
         //是否使用氮氣
         UseN2O=false;
-        if(!Config.Stay && !this.IsAi && !SystemGameOver)
+        if(!this.Stay && !this.IsAi && !SystemGameOver && KeyBoardPressArray[38])
             UseN2O=CheckKeyBoardPress(UserKeyboardSetting.N2O);
 
         //消耗氮氣
@@ -730,30 +781,33 @@ function Car(iConfig)
 
 
         //手排
-    	if(!Config.Stay && !this.IsAi && !Config.AutoGear && !SystemGameOver)
+    	if(!this.Stay && !this.IsAi && !Config.AutoGear && !SystemGameOver)
     	{
+            KeyNextGear=CheckKeyBoardPress(UserKeyboardSetting.NextGear);
+            KeyPervGear=CheckKeyBoardPress(UserKeyboardSetting.PervGear);
+
             //進檔
-            if(!KeyNextGear && CheckKeyBoardPress(UserKeyboardSetting.NextGear))
+            if(!HadKeyNextGear && KeyNextGear)
             {
-                KeyNextGear=true;
+                HadKeyNextGear=true;
                 this.NextGear();
                 this.UpdateEngineSpeedPer();
             }
-            else if(KeyNextGear && !CheckKeyBoardPress(UserKeyboardSetting.NextGear))
+            else if(HadKeyNextGear && !KeyNextGear)
             {
-                KeyNextGear=false;
+                HadKeyNextGear=false;
             }
 
             //退檔
-            if(!KeyPervGear && CheckKeyBoardPress(UserKeyboardSetting.PervGear))
+            if(!HadKeyPervGear && KeyPervGear)
             {
-                KeyPervGear=true;
+                HadKeyPervGear=true;
                 this.PervGear();
                 this.UpdateEngineSpeedPer();
             }
-            else if(KeyPervGear && !CheckKeyBoardPress(UserKeyboardSetting.PervGear))
+            else if(HadKeyPervGear && !KeyPervGear)
             {
-                KeyPervGear=false;
+                HadKeyPervGear=false;
             }
     	}
     	//自排
@@ -798,9 +852,11 @@ function Car(iConfig)
         }
         
         //玩家要求重置
-        if(!Config.Stay && !SystemGameOver)
+        if(!this.Stay && !SystemGameOver)
         {
-            if(!this.IsAi && !this.UserOnReset && CheckKeyBoardPress(UserKeyboardSetting.Reset))
+            KeyUserOnReset=CheckKeyBoardPress(UserKeyboardSetting.Reset);
+
+            if(!this.IsAi && !this.UserOnReset && KeyUserOnReset)
             {
                 this.UserReset();
             }
@@ -862,8 +918,10 @@ function Car(iConfig)
         }
 
         //加速
-        if(!Config.Stay)
+        //if(!this.Stay)
         {
+            this.EngineOverRunning=false;
+
             //引擎超轉延遲
             if(EngineOverRunningDelayTime>0)
                 EngineOverRunningDelayTime--;
@@ -871,6 +929,8 @@ function Car(iConfig)
             //超轉
             if(WheelSpeedMax*((Config.Gear[NowGear].Reverse)?-1:1)/Config.Gear[NowGear].TargetSpeed>1)
             {
+                this.EngineOverRunning=true;
+
                 //設定超轉延遲
                 EngineOverRunningDelayTime=5;
 
@@ -932,7 +992,7 @@ function Car(iConfig)
         }
 
         //玩家控制煞車或倒車
-        if(!Config.Stay && !this.IsAi && !SystemGameOver)
+        if(!this.Stay && !this.IsAi && !SystemGameOver)
         {
         	if(KeyBoardPressArray[40] || CheckKeyBoardPress(UserKeyboardSetting.Brake))
 			{
@@ -943,7 +1003,7 @@ function Car(iConfig)
                 this.UnTakeBrake();
 			}
         }
-        else if(Config.Stay)
+        else if(this.Stay)
         {
             this.TakeBrake();
         }
@@ -971,7 +1031,7 @@ function Car(iConfig)
         }
     
         //玩家控制轉彎
-        if(!Config.Stay && !this.IsAi && !SystemGameOver)
+        if(!this.Stay && !this.IsAi && !SystemGameOver)
 		{
 			if(KeyBoardPressArray[39])
 	        {
@@ -988,7 +1048,7 @@ function Car(iConfig)
         }
         
         //計算玩家控制所造成的輪胎轉向
-        if(!Config.Stay && !this.IsAi)
+        if(!this.Stay && !this.IsAi)
         {
             if(Math.abs(NowSteerVal-TargetSteerVal)<Config.SteerAdd)
             {
@@ -1044,8 +1104,8 @@ function Car(iConfig)
         }
 
         //轉向橫移方向
-        var ShiftAng=Angle3(this.Speed.x,0,0,0,this.Speed.x,this.Speed.y) * ((this.Speed.y<0)?1:-1);
-        var ShiftAngPer=this.Speed.length();
+        var ShiftAng=this.MoveAngle*1;
+        var ShiftAngPer=this.SpeedLength;
 
         if(ShiftAngPer>0.5)ShiftAngPer=0.5;
         else if(ShiftAngPer<0)ShiftAngPer=0;
@@ -1062,6 +1122,33 @@ function Car(iConfig)
         {
             if(Config.Wheel[i].Steer)
                 this.Vehicle.setSteeringValue((SteerPer*Config.SteerMax*(1-ShiftAngPer) + ShiftAng*ShiftAngPer)*Math.PI/180, i);
+        }
+
+        //顯示排氣管火焰
+        if(ThrottleUp==false && LastThrottleState==true)
+        {
+            ShowBackFireTime=ShowBackFireTimeMax*1;
+        }
+        LastThrottleState=ThrottleUp;
+
+        if(ShowBackFireTime>0)
+        {
+            ShowBackFireTime--;
+            this.BackFireGroup.visible=this.OnBackFireVisible=true;
+        }
+        else
+        {
+            this.BackFireGroup.visible=this.OnBackFireVisible=false;
+        }
+
+        //顯示排氣管氮氣火焰
+        if(UseN2O)
+        {
+            this.BackBlueFireGroup.visible=this.OnBackBlueFireVisible=true;
+        }
+        else
+        {
+            this.BackBlueFireGroup.visible=this.OnBackBlueFireVisible=false;
         }
 
         //更新物件為置
@@ -1127,7 +1214,6 @@ function Car(iConfig)
                 //是否離地飛行
                 if(this.OnFly && this.Vehicle.wheelInfos[i].raycastResult.hasHit)
                     this.OnFly=false;
-
 
                 //當該輪胎接觸地面且不接觸草地
                 if( Config.Wheel[i].Power && 
@@ -1223,15 +1309,18 @@ function Car(iConfig)
         //草地打滑
         //if(MainFocusUnit==ThisCar)
         {
+            var SpeedAdd=this.SpeedLength+0.5;
+            if(SpeedAdd>1)SpeedAdd=1;
+
             for(var i=0,len=Config.Wheel.length;i<len;i++)
             {
                 if(this.Vehicle.wheelInfos[i].raycastResult.hasHit && Math.abs(this.Vehicle.wheelInfos[i].raycastResult.hitPointWorld.y)<1.25)
                 {
-                    this.Vehicle.wheelInfos[i].frictionSlip=0.2;
+                    this.Vehicle.wheelInfos[i].frictionSlip=FrictionSlipMax*0.2*SpeedAdd;
                 }
                 else
                 {
-                    this.Vehicle.wheelInfos[i].frictionSlip=3*0.9*0.7*0.7;
+                    this.Vehicle.wheelInfos[i].frictionSlip=FrictionSlipMax*SpeedAdd;
                 }
             }
         }
@@ -1240,19 +1329,38 @@ function Car(iConfig)
 		Config.RunCallBack && Config.RunCallBack(ThisCar);
 
         //玩家按下切換視角
-        if(!KeyChangeViewType && CheckKeyBoardPress(UserKeyboardSetting.ChangeViewType))
+        KeyChangeViewType=CheckKeyBoardPress(UserKeyboardSetting.ChangeViewType);
+
+        if(!HadKeyChangeViewType && KeyChangeViewType)
         {
-            KeyChangeViewType=true;
+            HadKeyChangeViewType=true;
             this.ViewTypeChange();
         }
-        else if(KeyChangeViewType && !CheckKeyBoardPress(UserKeyboardSetting.ChangeViewType))
+        else if(HadKeyChangeViewType && !KeyChangeViewType)
         {
-            KeyChangeViewType=false;
+            HadKeyChangeViewType=false;
         }
 
         //更新Camera
-		//if(MainFocusUnit==ThisCar)
+		if(MainFocusUnit==ThisCar)
 		{
+            this.Camera.rotation.y=0;
+            this.CameraRotateGruop.rotation.y=0;
+
+            KeyLookBack=CheckKeyBoardPress(UserKeyboardSetting.LookBack);
+            KeyLookLeft=CheckKeyBoardPress(UserKeyboardSetting.LookLeft);
+            KeyLookRight=CheckKeyBoardPress(UserKeyboardSetting.LookRight);
+
+            //是否剛取消看左看右看後
+            var FirstChangeLook=false;
+            if(!KeyLookBack && LastKeyLookBackState || !KeyLookLeft && LastKeyLookLeftState || !KeyLookRight && LastKeyLookRightState)
+            {
+                FirstChangeLook=true;
+            }
+            LastKeyLookBackState=KeyLookBack;
+            LastKeyLookLeftState=KeyLookLeft;
+            LastKeyLookRightState=KeyLookRight;
+
             //遊戲結束
             if(ViewType==2 || SystemGameOver)
             {
@@ -1260,114 +1368,108 @@ function Car(iConfig)
                 this.Camera.position.y=Config.CameraOptions.Ended.Position.y;
                 this.Camera.position.z=Config.CameraOptions.Ended.Position.z;
                 this.Camera.rotation.y=90+20*Math.PI/180;
-
-                this.CameraGroup.position.x=0;
-                this.CameraGroup.position.y=0;
-                this.CameraGroup.position.z=0;
             }
             //預設視野
             else if(ViewType==0)
             {
                 //看後面
-                if(CheckKeyBoardPress(UserKeyboardSetting.LookBack))
+                if(KeyLookBack)
                 {
                     this.Camera.position.x=Config.CameraOptions.LookBack.Position.x;
                     this.Camera.position.y=Config.CameraOptions.LookBack.Position.y;
                     this.Camera.position.z=Config.CameraOptions.LookBack.Position.z;
-                    this.Camera.rotation.y=180*Math.PI/180;
 
-                    this.CameraGroup.position.x=0;
-                    this.CameraGroup.position.y=0;
-                    this.CameraGroup.position.z=0;
+                    this.CameraRotateGruop.rotation.y=180*Math.PI/180;
                 }
                 //看右邊
-                else if(CheckKeyBoardPress(UserKeyboardSetting.LookRight))
+                else if(KeyLookRight)
                 {
                     this.Camera.position.x=Config.CameraOptions.LookRight.Position.x;
                     this.Camera.position.y=Config.CameraOptions.LookRight.Position.y;
                     this.Camera.position.z=Config.CameraOptions.LookRight.Position.z;
-                    this.Camera.rotation.y=-90*Math.PI/180;
 
-                    this.CameraGroup.position.x=0;
-                    this.CameraGroup.position.y=0;
-                    this.CameraGroup.position.z=0;
+                    this.CameraRotateGruop.rotation.y=-90*Math.PI/180;
                 }
                 //看左邊
-                else if(CheckKeyBoardPress(UserKeyboardSetting.LookLeft))
+                else if(KeyLookLeft)
                 {
                     this.Camera.position.x=Config.CameraOptions.LookLeft.Position.x;
                     this.Camera.position.y=Config.CameraOptions.LookLeft.Position.y;
                     this.Camera.position.z=Config.CameraOptions.LookLeft.Position.z;
-                    this.Camera.rotation.y=90*Math.PI/180;
 
-                    this.CameraGroup.position.x=0;
-                    this.CameraGroup.position.y=0;
-                    this.CameraGroup.position.z=0;
+                    this.CameraRotateGruop.rotation.y=90*Math.PI/180;
                 }
                 //預設視角
                 else
                 {
-                    this.Camera.position.x=Config.CameraOptions.Default.Position.x;
-                    this.Camera.position.y=Config.CameraOptions.Default.Position.y;
-                    this.Camera.position.z=Config.CameraOptions.Default.Position.z;
-                    
-                    this.Camera.rotation.y=0;
+                    var SpeedLength=this.SpeedLength;
+                    if(SpeedLength>1)SpeedLength=1;
 
-                    this.CameraGroup.position.x=(this.CameraGroup.position.x*Config.CameraOptions.Default.SpeedPer) + (-this.Speed.x*Config.CameraOptions.Default.SpeedAdd*(1-Config.CameraOptions.Default.SpeedPer));
-                    this.CameraGroup.position.y=(this.CameraGroup.position.y*Config.CameraOptions.Default.SpeedPer) + (-this.Speed.y*Config.CameraOptions.Default.SpeedAdd*(1-Config.CameraOptions.Default.SpeedPer));
-                    this.CameraGroup.position.z=(this.CameraGroup.position.z*Config.CameraOptions.Default.SpeedPer) + (-this.Speed.z*Config.CameraOptions.Default.SpeedAdd*(1-Config.CameraOptions.Default.SpeedPer));
+                    CamreaDefaultRotation=(CamreaDefaultRotation*(1-Config.CameraOptions.Default.RotationEffect))+(this.MoveAngle*SpeedLength)*(Config.CameraOptions.Default.RotationEffect);
+
+                    this.Camera.position.x=(this.Camera.position.x*Config.CameraOptions.Default.SpeedAdd.x) + (1-Config.CameraOptions.Default.SpeedAdd.x)*(Config.CameraOptions.Default.Position.x + (-this.Speed.y*Config.CameraOptions.Default.SpeedPer.x));
+                    this.Camera.position.y=(this.Camera.position.y*Config.CameraOptions.Default.SpeedAdd.y) + (1-Config.CameraOptions.Default.SpeedAdd.y)*(Config.CameraOptions.Default.Position.y + (-this.Speed.z*Config.CameraOptions.Default.SpeedPer.y));
+                    this.Camera.position.z=(this.Camera.position.z*Config.CameraOptions.Default.SpeedAdd.z) + (1-Config.CameraOptions.Default.SpeedAdd.z)*(Config.CameraOptions.Default.Position.z + (-this.Speed.x*Config.CameraOptions.Default.SpeedPer.z));
+                    
+                    this.CameraRotateGruop.rotation.y=CamreaDefaultRotation*Math.PI/180;
                 }
             }
             //車內第一人稱視野
             else if(ViewType==1)
             {
                 //看後面
-                if(CheckKeyBoardPress(UserKeyboardSetting.LookBack))
+                if(KeyLookBack)
                 {
                     this.Camera.position.x=Config.CameraOptions.LookBack.Position.x;
                     this.Camera.position.y=Config.CameraOptions.LookBack.Position.y;
                     this.Camera.position.z=Config.CameraOptions.LookBack.Position.z;
-                    this.Camera.rotation.y=180*Math.PI/180;
 
-                    this.CameraGroup.position.x=0;
-                    this.CameraGroup.position.y=0;
-                    this.CameraGroup.position.z=0;
+                    this.CameraRotateGruop.rotation.y=180*Math.PI/180;
                 }
                 //看右邊
-                else if(CheckKeyBoardPress(UserKeyboardSetting.LookRight))
+                else if(KeyLookRight)
                 {
                     this.Camera.position.x=Config.CameraOptions.FOV.Position.x;
                     this.Camera.position.y=Config.CameraOptions.FOV.Position.y;
                     this.Camera.position.z=Config.CameraOptions.FOV.Position.z;
-                    this.Camera.rotation.y=-90*Math.PI/180;
 
-                    this.CameraGroup.position.x=0;
-                    this.CameraGroup.position.y=0;
-                    this.CameraGroup.position.z=0;
+                    this.Camera.rotation.y=-90*Math.PI/180;
                 }
                 //看左邊
-                else if(CheckKeyBoardPress(UserKeyboardSetting.LookLeft))
+                else if(KeyLookLeft)
                 {
                     this.Camera.position.x=Config.CameraOptions.FOV.Position.x;
                     this.Camera.position.y=Config.CameraOptions.FOV.Position.y;
                     this.Camera.position.z=Config.CameraOptions.FOV.Position.z;
-                    this.Camera.rotation.y=90*Math.PI/180;
 
-                    this.CameraGroup.position.x=0;
-                    this.CameraGroup.position.y=0;
-                    this.CameraGroup.position.z=0;
+                    this.Camera.rotation.y=90*Math.PI/180;
                 }
                 //FOV
                 else
                 {
-                    this.Camera.position.x=Config.CameraOptions.FOV.Position.x;
-                    this.Camera.position.y=Config.CameraOptions.FOV.Position.y;
-                    this.Camera.position.z=Config.CameraOptions.FOV.Position.z;
-                    this.Camera.rotation.y=0;
+                    var SpeedLength=this.SpeedLength;
+                    if(SpeedLength>1)SpeedLength=1;
+                    CamreaDefaultRotation=(CamreaDefaultRotation*(1-Config.CameraOptions.FOV.RotationEffect))+(this.MoveAngle*SpeedLength)*(Config.CameraOptions.FOV.RotationEffect);
 
-                    this.CameraGroup.position.x=0;
-                    this.CameraGroup.position.y=0;
-                    this.CameraGroup.position.z=0;
+                    //如果剛取消看左看右看後，則直接設定攝影機位置
+                    if(FirstChangeLook)
+                    {
+                        FOVSpeedAdd.x=0;
+                        FOVSpeedAdd.y=0;
+                        FOVSpeedAdd.z=0;
+                    }
+                    else
+                    {
+                        FOVSpeedAdd.x=Config.CameraOptions.FOV.SpeedAdd.x;
+                        FOVSpeedAdd.y=Config.CameraOptions.FOV.SpeedAdd.y;
+                        FOVSpeedAdd.z=Config.CameraOptions.FOV.SpeedAdd.z;
+                    }
+
+                    this.Camera.position.x=(this.Camera.position.x*FOVSpeedAdd.x) + (1-FOVSpeedAdd.x)*(Config.CameraOptions.FOV.Position.x + (-this.Speed.y*Config.CameraOptions.FOV.SpeedPer.x));
+                    this.Camera.position.y=(this.Camera.position.y*FOVSpeedAdd.y) + (1-FOVSpeedAdd.y)*(Config.CameraOptions.FOV.Position.y + (-this.Speed.z*Config.CameraOptions.FOV.SpeedPer.y));
+                    this.Camera.position.z=(this.Camera.position.z*FOVSpeedAdd.z) + (1-FOVSpeedAdd.z)*(Config.CameraOptions.FOV.Position.z + (-this.Speed.x*Config.CameraOptions.FOV.SpeedPer.z));
+                    
+                    this.CameraRotateGruop.rotation.y=CamreaDefaultRotation*Math.PI/180;
                 }
             }
 		}
@@ -1390,11 +1492,13 @@ function Car(iConfig)
 
     //加速
     this.SpeedUp=function(){
+        this.OnThrottleUp=true;
         ThrottleUp=true;
     };
 
     //減速
     this.SpeedDown=function(){
+        this.OnThrottleUp=false;
         ThrottleUp=false;
     };
 
@@ -1422,11 +1526,14 @@ function Car(iConfig)
         if(Per>1)Per=1;
         if(Per<0)Per=0;
 
+        this.OnTakeBrake=true;
         TakeBrakePer=Per;
     }
 
     //取消煞車
     this.UnTakeBrake=function(){
+        
+        this.OnTakeBrake=false;
         TakeBrakePer=0;
     }
 

@@ -73,6 +73,10 @@ function Angle3(x1,y1,x2,y2,x3,y3)
 	if (cosM > 1) cosM = 1;
 
 	var angleAMB = Math.acos(cosM) * 180 / Math.PI;
+
+	if(isNaN(angleAMB))
+		angleAMB=0;
+
 	return angleAMB;
 }
 

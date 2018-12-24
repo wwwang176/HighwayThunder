@@ -1,5 +1,6 @@
 function TruckContainer(iConfig)
 {
+    var MassOffset=new THREE.Vector3(0,0,1);
     var Config={
         Scene:Scene,
         World:world,
@@ -10,12 +11,12 @@ function TruckContainer(iConfig)
         WheelOptions:{
             radius: 0.55 ,
             directionLocal: new CANNON.Vec3(0, 0, -1),
-            suspensionStiffness: 30/4,
+            suspensionStiffness: 30,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
-            frictionSlip: 3*0.9*0.7*0.7/**1.5*/,
-            dampingRelaxation: 2.3/3,
-            dampingCompression: 4.4/3,
+            frictionSlip: 3*0.9*0.7*0.7*2/**1.5*/,
+            dampingRelaxation: 2.3,
+            dampingCompression: 4.4,
             maxSuspensionForce: 100000,
             rollInfluence:  /*0.01*/0.25*1.5,
             axleLocal: new CANNON.Vec3(0, 1, 0),
@@ -92,6 +93,13 @@ function TruckContainer(iConfig)
 
     Config=$.extend(Config,iConfig);
 
+    for(var i=0;i<Config.Wheel.length;i++)
+    {
+        Config.Wheel[i].Position.x+=MassOffset.x;
+        Config.Wheel[i].Position.y+=MassOffset.y;
+        Config.Wheel[i].Position.z+=MassOffset.z;
+    }
+
     //繼承Car
     this.prototype=Object.create(Package.prototype);
     Package.call(this,Config);
@@ -127,8 +135,10 @@ function TruckContainer(iConfig)
     this.LOD.addLevel(CarModelL1Group,0);
     this.LOD.addLevel(CarModelL2Group,300);
 
-    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(12.2/2,2.43/2,2.9/2)),new CANNON.Vec3(0,0,2.9/2));
-    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(0.3/2,2.43/2,0.75/2)),new CANNON.Vec3(6.1-0.3/2,0,-0.75/2));
+    this.LOD.position.set(MassOffset.x,MassOffset.y,MassOffset.z);
+
+    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(12.2/2,2.43/2,2.9/2)),new CANNON.Vec3(0+MassOffset.x,0+MassOffset.y,2.9/2+MassOffset.z));
+    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(0.3/2,2.43/2,0.75/2)),new CANNON.Vec3(6.1-0.3/2+MassOffset.x,0+MassOffset.y,-0.75/2+MassOffset.z));
     
 
     //後方煞車燈
@@ -141,7 +151,7 @@ function TruckContainer(iConfig)
         depthTest: true
     });
     var BRLight = new THREE.Sprite( material );
-    BRLight.position.set(6.105,0.9,-0.325);
+    BRLight.position.set(6.105+MassOffset.x,0.9+MassOffset.y,-0.325+MassOffset.z);
     BRLight.scale.set(3,3,3);
     this.MeshGroup.add(BRLight);
 
@@ -154,7 +164,7 @@ function TruckContainer(iConfig)
         depthTest: true
     });
     var BLLight = new THREE.Sprite( material );
-    BLLight.position.set(6.105,-0.9,-0.325);
+    BLLight.position.set(6.105+MassOffset.x,-0.9+MassOffset.y,-0.325+MassOffset.z);
     BLLight.scale.set(3,3,3);
     this.MeshGroup.add(BLLight);
 
@@ -169,7 +179,7 @@ function TruckContainer(iConfig)
         depthTest: true
     });
     var BRSignalLight = new THREE.Sprite( material );
-    BRSignalLight.position.set(6.105,1.1,-0.325);
+    BRSignalLight.position.set(6.105+MassOffset.x,1.1+MassOffset.y,-0.325+MassOffset.z);
     BRSignalLight.scale.set(3,3,3);
     BRSignalLight.visible=false;
     this.MeshGroup.add(BRSignalLight);
@@ -183,7 +193,7 @@ function TruckContainer(iConfig)
         depthTest: true
     });
     var BLSignalLight = new THREE.Sprite( material );
-    BLSignalLight.position.set(6.105,-1.1,-0.325);
+    BLSignalLight.position.set(6.105+MassOffset.x,-1.1+MassOffset.y,-0.325+MassOffset.z);
     BLSignalLight.scale.set(3,3,3);
     BLSignalLight.visible=false;
     this.MeshGroup.add(BLSignalLight);

@@ -5,10 +5,11 @@ var DebugTime=0;
 
 function Bus(iConfig)
 {
+	var MassOffset=new THREE.Vector3(0,0,0.5);
 	var Config={
         Mass:15000,
-        EngineForce:18000*2,
-        BrakeForce:/*150*/200*2,			//煞車速度
+        EngineForce:18000*4,
+        BrakeForce:/*150*/800,			//煞車速度
         AiTargetLaneYOffsetMax:0.5,
         AiResetZOffset:1,
 		Gear:[	
@@ -20,56 +21,56 @@ function Bus(iConfig)
 			{
 				Reverse:false,
 				TargetSpeed:60,
-                TorquePer:0.5              //扭力比例
+                TorquePer:0.55              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:88,
-                TorquePer:0.4              //扭力比例
+                TorquePer:0.45              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:116,
-                TorquePer:0.35              //扭力比例
+                TorquePer:0.4              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:144,
-                TorquePer:0.3              //扭力比例
+                TorquePer:0.35              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:172,
-                TorquePer:0.25              //扭力比例
+                TorquePer:0.3              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:200,
-                TorquePer:0.2              //扭力比例
+                TorquePer:0.25              //扭力比例
             }
         ],
         WheelOptions:{
             radius: 0.55 ,
             directionLocal: new CANNON.Vec3(0, 0, -1),
-            suspensionStiffness: 30/4,
+            suspensionStiffness: 30,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
-            frictionSlip: 3*0.9*0.7*0.7/**1.5*/,
-            dampingRelaxation: 2.3/3*0.7,
-            dampingCompression: 4.4/3*0.7,
+            frictionSlip: 3*0.9*0.7*0.7*2,
+            dampingRelaxation: 2.3,
+            dampingCompression: 4.4,
             maxSuspensionForce: 100000,
             rollInfluence:  /*0.01*/0.25*1.5,
             axleLocal: new CANNON.Vec3(0, 1, 0),
             chassisConnectionPointLocal: new CANNON.Vec3(0,0,0),
             maxSuspensionTravel: 0.0,
-            customSlidingRotationalSpeed: -(60/2.1384),  //輪胎沒阻力的時候最高轉速
+            customSlidingRotationalSpeed: -60,  //輪胎沒阻力的時候最高轉速
             useCustomSlidingRotationalSpeed: true
         },
         Wheel:[
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-3.43,-2.495/2+0.2,-1.6+0.9),
+                Position:new THREE.Vector3(-3.43,-2.495/2+0.2,-0.7),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -78,7 +79,7 @@ function Bus(iConfig)
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-3.43,2.495/2-0.2,-1.6+0.9),
+                Position:new THREE.Vector3(-3.43,2.495/2-0.2,-0.7),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -87,7 +88,7 @@ function Bus(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(2.73,-2.495/2+0.2,-1.6+0.9),
+                Position:new THREE.Vector3(2.73,-2.495/2+0.2,-0.7),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -96,7 +97,7 @@ function Bus(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(2.73,2.495/2-0.2,-1.6+0.9),
+                Position:new THREE.Vector3(2.73,2.495/2-0.2,-0.7),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -106,33 +107,27 @@ function Bus(iConfig)
         CameraOptions:{
             Default:{
                 Position:new THREE.Vector3(0,4,13),
-                SpeedAdd:2,
-                SpeedPer:0.2
+                SpeedAdd:new THREE.Vector3(0,0.5,0.5),
+                SpeedPer:new THREE.Vector3(0,1,1),
+                RotationEffect:0.15
             },
             LookBack:{
-                Position:new THREE.Vector3(0,4,-18),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(0,4,18)
             },
             LookLeft:{
-                Position:new THREE.Vector3(10,4,0),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(0,4,10)
             },
             LookRight:{
-                Position:new THREE.Vector3(-10,4,0),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(0,4,10)
             },
             FOV:{
                 Position:new THREE.Vector3(0,0.8,-1),
-                SpeedAdd:0,
-                SpeedPer:0
+                SpeedAdd:new THREE.Vector3(0,0,0.8),
+                SpeedPer:new THREE.Vector3(1,1,0),
+                RotationEffect:0.15
             },
             Ended:{
-                Position:new THREE.Vector3(2,0,-10),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(2,0,-10)
             },
         },
         OnRunCallBack:function(){},
@@ -141,6 +136,38 @@ function Bus(iConfig)
         UnTakeBreak:UnTakeBreak,
         ResetCallBack:ResetCallBack
     };
+
+    //質量偏移
+    Config.CameraOptions.Default.Position.x+=MassOffset.y;
+    Config.CameraOptions.Default.Position.y+=MassOffset.z;
+    Config.CameraOptions.Default.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.LookBack.Position.x+=MassOffset.y;
+    Config.CameraOptions.LookBack.Position.y+=MassOffset.z;
+    Config.CameraOptions.LookBack.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.LookLeft.Position.x+=MassOffset.y;
+    Config.CameraOptions.LookLeft.Position.y+=MassOffset.z;
+    Config.CameraOptions.LookLeft.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.LookRight.Position.x+=MassOffset.y;
+    Config.CameraOptions.LookRight.Position.y+=MassOffset.z;
+    Config.CameraOptions.LookRight.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.FOV.Position.x+=MassOffset.y;
+    Config.CameraOptions.FOV.Position.y+=MassOffset.z;
+    Config.CameraOptions.FOV.Position.z+=MassOffset.x;
+
+    Config.CameraOptions.Ended.Position.x+=MassOffset.y;
+    Config.CameraOptions.Ended.Position.y+=MassOffset.z;
+    Config.CameraOptions.Ended.Position.z+=MassOffset.x;
+    
+    for(var i=0;i<Config.Wheel.length;i++)
+    {
+        Config.Wheel[i].Position.x+=MassOffset.x;
+        Config.Wheel[i].Position.y+=MassOffset.y;
+        Config.Wheel[i].Position.z+=MassOffset.z;
+    }
 
     Config=$.extend(Config,iConfig);
 
@@ -209,14 +236,14 @@ function Bus(iConfig)
     CarModelL2Group.add(cube);
     this.LOD.addLevel(CarModelL2Group,200);
 
-    
+    this.LOD.position.set(MassOffset.x,MassOffset.y,MassOffset.z);
 
 	this.Body.userData={
 		Index:this.Index
 	};
 
 
-	this.Body.addShape(new CANNON.Box(new CANNON.Vec3(12.2/2,2.5/2,2.87/2)),new CANNON.Vec3(0,0,0.5));
+	this.Body.addShape(new CANNON.Box(new CANNON.Vec3(12.2/2,2.5/2,2.87/2)),new CANNON.Vec3(0+MassOffset.x,0+MassOffset.y,0.5+MassOffset.z));
 
     //this.Body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1),Math.PI);
     
@@ -231,7 +258,7 @@ function Bus(iConfig)
         depthTest: true
     });
     var BRLight = new THREE.Sprite( material );
-    BRLight.position.set(6.105,1.05,0.94-1);
+    BRLight.position.set(6.105+MassOffset.x,1.05+MassOffset.y,-0.06+MassOffset.z);
     BRLight.scale.set(3,3,3);
     this.MeshGroup.add(BRLight);
 
@@ -244,7 +271,7 @@ function Bus(iConfig)
         depthTest: true
     });
     var BLLight = new THREE.Sprite( material );
-    BLLight.position.set(6.105,-1.05,0.94-1);
+    BLLight.position.set(6.105+MassOffset.x,-1.05+MassOffset.y,-0.06+MassOffset.z);
     BLLight.scale.set(3,3,3);
     this.MeshGroup.add(BLLight);
 
@@ -258,7 +285,7 @@ function Bus(iConfig)
         depthTest: true
     });
     var FRLight = new THREE.Sprite( material );
-    FRLight.position.set(-6.105,0.95,0.36-1);
+    FRLight.position.set(-6.105+MassOffset.x,0.95+MassOffset.y,-0.64+MassOffset.z);
     FRLight.scale.set(5,5,5);
     this.MeshGroup.add(FRLight);
 
@@ -271,7 +298,7 @@ function Bus(iConfig)
         depthTest: true
     });
     var FLLight = new THREE.Sprite( material );
-    FLLight.position.set(-6.105,-0.95,0.36-1);
+    FLLight.position.set(-6.105+MassOffset.x,-0.95+MassOffset.y,-0.64+MassOffset.z);
     FLLight.scale.set(5,5,5);
     this.MeshGroup.add(FLLight);
 
@@ -285,7 +312,7 @@ function Bus(iConfig)
         depthTest: true
     });
     var BRSignalLight = new THREE.Sprite( material );
-    BRSignalLight.position.set(6.105,1.05,1.23-1);
+    BRSignalLight.position.set(6.105+MassOffset.x,1.05+MassOffset.y,0.23+MassOffset.z);
     BRSignalLight.scale.set(3,3,3);
     BRSignalLight.visible=false;
     this.MeshGroup.add(BRSignalLight);
@@ -299,7 +326,7 @@ function Bus(iConfig)
         depthTest: true
     });
     var BLSignalLight = new THREE.Sprite( material );
-    BLSignalLight.position.set(6.105,-1.05,1.23-1);
+    BLSignalLight.position.set(6.105+MassOffset.x,-1.05+MassOffset.y,0.23+MassOffset.z);
     BLSignalLight.scale.set(3,3,3);
     BLSignalLight.visible=false;
     this.MeshGroup.add(BLSignalLight);
@@ -314,7 +341,7 @@ function Bus(iConfig)
         depthTest: true
     });
     var FRSignalLight = new THREE.Sprite( material );
-    FRSignalLight.position.set(-6.105,1.2,0.36-1);
+    FRSignalLight.position.set(-6.105+MassOffset.x,1.2+MassOffset.y,-0.64+MassOffset.z);
     FRSignalLight.scale.set(3,3,3);
     FRSignalLight.visible=false;
     this.MeshGroup.add(FRSignalLight);
@@ -328,7 +355,7 @@ function Bus(iConfig)
         depthTest: true
     });
     var FLSignalLight = new THREE.Sprite( material );
-    FLSignalLight.position.set(-6.105,-1.2,0.36-1);
+    FLSignalLight.position.set(-6.105+MassOffset.x,-1.2+MassOffset.y,-0.64+MassOffset.z);
     FLSignalLight.scale.set(3,3,3);
     FLSignalLight.visible=false;
     this.MeshGroup.add(FLSignalLight);
@@ -337,20 +364,20 @@ function Bus(iConfig)
     if(Config.HaveLight)
     {
         var LeftSpotLight = new THREE.SpotLight(0xffffff, 1, 30, Math.PI/4, 0.3);
-        LeftSpotLight.position.set(-6.105,-0.95,0.36-1);
+        LeftSpotLight.position.set(-6.105+MassOffset.x,-0.95+MassOffset.y,-0.64+MassOffset.z);
         this.MeshGroup.add( LeftSpotLight );
 
         var TargetObj=new THREE.Object3D();
-        TargetObj.position.set(-7,-0.95,0.36-1);
+        TargetObj.position.set(-7+MassOffset.x,-0.95+MassOffset.y,-0.64+MassOffset.z);
         this.MeshGroup.add( TargetObj );
         LeftSpotLight.target=TargetObj;
         
         var RightSpotLight = new THREE.SpotLight(0xffffff, 1, 30, Math.PI/4, 0.3);
-        RightSpotLight.position.set(-6.105,0.95,0.36-1);
+        RightSpotLight.position.set(-6.105+MassOffset.x,0.95+MassOffset.y,-0.64+MassOffset.z);
         this.MeshGroup.add( RightSpotLight );
 
         var TargetObj=new THREE.Object3D();
-        TargetObj.position.set(-7,0.95,0.36-1);
+        TargetObj.position.set(-7+MassOffset.x,0.95+MassOffset.y,-0.64+MassOffset.z);
         this.MeshGroup.add( TargetObj );
         RightSpotLight.target=TargetObj;
     }
@@ -407,7 +434,7 @@ function Bus(iConfig)
         NowSpeed=ThisCar.Speed;
 
         //遠光燈
-        if(!Config.Stay && Config.HaveLight)
+        if(!ThisCar.Stay && Config.HaveLight)
         {
             if(CheckKeyBoardPress(UserKeyboardSetting.Bright))
             {

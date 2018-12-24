@@ -7,45 +7,73 @@ function Sedan(iConfig)
 {
 	var Config={
         HaveLight:false,
-        EngineForce:13000,              //引擎力量
-        BrakeForce:150,                 //煞車力量
+        HaveBackFire:false,
+        EngineForce:26000,              //引擎力量
+        BrakeForce:250,                 //煞車力量
+        O2N2Max:60*5,					//氮氣最大量
         Gear:[							//齒輪設定
             {
                 Reverse:true,   //倒退檔
-				TargetSpeed:50,
+				TargetSpeed:60,
                 TorquePer:0.5              //扭力比例
 			},
 			{
 				Reverse:false,
-				TargetSpeed:50,
+				TargetSpeed:60,
+                TorquePer:0.8              //扭力比例
+			},
+			{
+				Reverse:false,
+				TargetSpeed:108,
                 TorquePer:0.5              //扭力比例
 			},
 			{
 				Reverse:false,
-				TargetSpeed:90,
+				TargetSpeed:156,
                 TorquePer:0.4              //扭力比例
 			},
 			{
 				Reverse:false,
-				TargetSpeed:130,
+				TargetSpeed:204,
                 TorquePer:0.3              //扭力比例
 			},
 			{
 				Reverse:false,
-				TargetSpeed:170,
+				TargetSpeed:252,
                 TorquePer:0.2              //扭力比例
-			},
-			{
-				Reverse:false,
-				TargetSpeed:210,
-                TorquePer:0.1              //扭力比例
             },
             {
 				Reverse:false,
-				TargetSpeed:250,
-                TorquePer:0.05              //扭力比例
+				TargetSpeed:300,
+                TorquePer:0.1              //扭力比例
             }
         ],
+        CameraOptions:{
+            Default:{
+                Position:new THREE.Vector3(0,2,5),  //+右-左，+上-下，+後-前
+                SpeedAdd:new THREE.Vector3(0,0.5,0.5),
+                SpeedPer:new THREE.Vector3(0,1,1),
+                RotationEffect:0.15,
+            },
+            LookBack:{
+                Position:new THREE.Vector3(0,2,10)
+            },
+            LookLeft:{
+                Position:new THREE.Vector3(0,2,5)
+            },
+            LookRight:{
+                Position:new THREE.Vector3(0,2,5)
+            },
+            FOV:{
+                Position:new THREE.Vector3(0,0.8,-1),
+                SpeedAdd:new THREE.Vector3(0,0,0.8),
+                SpeedPer:new THREE.Vector3(0,0,0),
+                RotationEffect:0
+            },
+            Ended:{
+                Position:new THREE.Vector3(1.25,0.5,-4.5)
+            },
+        },
         OnRunCallBack:function(){},
         RunCallBack:RunCallBack,
         TakeBreak:TakeBreak,
@@ -127,14 +155,14 @@ function Sedan(iConfig)
     };
 
 
-	//this.Body.addShape(new CANNON.Box(new CANNON.Vec3(3.9/2,1.4/2,0.6/2)),new CANNON.Vec3(0,0,0.3));
-    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(3.3/2,1.4/2,0.6/2)),new CANNON.Vec3(0,0,0.3));
+	this.Body.addShape(new CANNON.Box(new CANNON.Vec3(3.9/2,1.4/2,0.6/2)),new CANNON.Vec3(0,0,0.3));
+    //this.Body.addShape(new CANNON.Box(new CANNON.Vec3(3.3/2,1.4/2,0.6/2)),new CANNON.Vec3(0,0,0.3));
 
-    var q = new CANNON.Quaternion();
+    /*var q = new CANNON.Quaternion();
     q.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI / 2);
     this.Body.addShape(new CANNON.Cylinder(0.6/2,0.6/2,1.4,4),new CANNON.Vec3(-1.65,0,0.3),q);
     this.Body.addShape(new CANNON.Cylinder(0.6/2,0.6/2,1.4,4),new CANNON.Vec3(1.65,0,0.3),q);
-    
+    */
 	this.Body.addShape(new CANNON.Box(new CANNON.Vec3(1.7/2,1.3/2,0.7/2)),new CANNON.Vec3(0.3,0,0.6));
 
     //this.Body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1),Math.PI);
@@ -302,6 +330,50 @@ function Sedan(iConfig)
         RightSpotLight.target=TargetObj;
     }
 
+    if(Config.HaveBackFire)
+    {
+        //排氣管點火
+        for(var i=0;i<5;i++)
+        {
+            var material = new THREE.SpriteMaterial({
+                map: FireTexture[i], 
+                color: 0xffffff, 
+                transparent: true,
+                depthWrite: false,
+                depthTest: true
+            });
+            var BackFire = new THREE.Sprite( material );
+            BackFire.position.set(i*0.7,0,0);
+            BackFire.scale.set((i+1)*0.4,(i+1)*0.4,1);
+            this.BackFireGroup.add(BackFire);
+        }
+        this.BackFireGroup.position.x=1.9;
+        this.BackFireGroup.position.y=0.4;
+        this.BackFireGroup.position.z=0.08;
+        this.BackFireGroup.scale.set(0.15,0.2,0.2);
+
+        //氮氣點火
+        for(var i=0;i<5;i++)
+        {
+            var material = new THREE.SpriteMaterial({
+                map: BlueFireTexture[i], 
+                color: 0xffffff, 
+                transparent: true,
+                depthWrite: false,
+                depthTest: true
+            });
+            var BackFire = new THREE.Sprite( material );
+            BackFire.position.set(i*0.7,0,0);
+            BackFire.scale.set((i+1)*0.4,(i+1)*0.4,1);
+            this.BackBlueFireGroup.add(BackFire);
+        }
+        this.BackBlueFireGroup.position.x=1.9;
+        this.BackBlueFireGroup.position.y=0.4;
+        this.BackBlueFireGroup.position.z=0.08;
+        this.BackBlueFireGroup.scale.set(0.15,0.2,0.2);
+    }
+    
+
     function TakeBreak(ThisCar)
     {
         BRLight.scale.set(5,5,5);
@@ -353,13 +425,39 @@ function Sedan(iConfig)
     var NowSpeed=new THREE.Vector3();
     function RunCallBack(ThisCar)
     {
+        if(Config.HaveBackFire)
+        {
+            if(ThisCar.OnBackFireVisible)
+            {
+                for(var i=0;i<ThisCar.BackFireGroup.children.length;i++)
+                {
+                    ThisCar.BackFireGroup.children[i].position.y=RandF(0.2)-0.1;
+                    ThisCar.BackFireGroup.children[i].position.z=RandF(0.2)-0.1;
+                    ThisCar.BackFireGroup.children[i].material.opacity=RandF(0.7);
+                    ThisCar.BackFireGroup.children[i].material.rotation+=RandF(3);
+                }
+            }
+
+            if(ThisCar.OnBackBlueFireVisible)
+            {
+                for(var i=0;i<ThisCar.BackBlueFireGroup.children.length;i++)
+                {
+                    ThisCar.BackBlueFireGroup.children[i].position.y=RandF(0.2)-0.1;
+                    ThisCar.BackBlueFireGroup.children[i].position.z=RandF(0.2)-0.1;
+                    ThisCar.BackBlueFireGroup.children[i].material.opacity=RandF(0.7);
+                    ThisCar.BackBlueFireGroup.children[i].material.rotation+=RandF(3);
+                }
+            }
+        }
+
+
         NowSpeed=ThisCar.Speed;
 
         //後方倒退燈
         ReversingLeftLight.visible=ReversingRightLight.visible=(ThisCar.GetNowGear()==0);
 
         //遠光燈
-        if(!Config.Stay && Config.HaveLight)
+        if(!ThisCar.Stay && Config.HaveLight)
         {
             if(CheckKeyBoardPress(UserKeyboardSetting.Bright))
             {

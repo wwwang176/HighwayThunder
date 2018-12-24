@@ -8,9 +8,10 @@ function WEX(iConfig)
 	var Config={
         Scene:Scene,
         HaveLight:false,
+        HaveBackFire:false,
         Mass:1800,                      //質量
-        EngineForce:19500,              //引擎力量
-        BrakeForce:200,                 //煞車力量
+        EngineForce:39000,              //引擎力量
+        BrakeForce:400,                 //煞車力量
         HaveO2N2:true,					//氮氣
         O2N2Max:60*5,					//氮氣最大量
         AutoGear:false,					//是否是自排
@@ -23,85 +24,85 @@ function WEX(iConfig)
 			{
 				Reverse:false,
 				TargetSpeed:66,
-                TorquePer:0.5              //扭力比例
+                TorquePer:0.7              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:132,
-                TorquePer:0.4              //扭力比例
+                TorquePer:0.5              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:198,
-                TorquePer:0.3              //扭力比例
+                TorquePer:0.4              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:264,
-                TorquePer:0.2              //扭力比例
+                TorquePer:0.3              //扭力比例
 			},
 			{
 				Reverse:false,
 				TargetSpeed:330,
-                TorquePer:0.1              //扭力比例
+                TorquePer:0.2              //扭力比例
             },
             {
 				Reverse:false,
 				TargetSpeed:396,
-                TorquePer:0.05              //扭力比例
+                TorquePer:0.1              //扭力比例
             }
         ],
         WheelOptions:{
             radius: 0.28 ,
             directionLocal: new CANNON.Vec3(0, 0, -1),
-            suspensionStiffness: 30/4*2,
+            suspensionStiffness: 30,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
-            frictionSlip: 3*0.9*0.7*0.7/**1.5*/,
-            dampingRelaxation: 2.3/3,
-            dampingCompression: 4.4/3,
+            frictionSlip: 3*0.9*0.7*0.7*2.2/**1.5*/,
+            dampingRelaxation: 2.3/3*1.5,
+            dampingCompression: 4.4/3*1.5,
             maxSuspensionForce: 100000,
-            rollInfluence:  /*0.01*/0.375*1.2,
+            rollInfluence:  /*0.01*/0.375/**1.2*/,
             axleLocal: new CANNON.Vec3(0, 1, 0),
             chassisConnectionPointLocal: new CANNON.Vec3(0,0,0),
             maxSuspensionTravel: 0.0,
-            customSlidingRotationalSpeed: -(60/2.1384),  //輪胎沒阻力的時候最高轉速
+            customSlidingRotationalSpeed: -60,  //輪胎沒阻力的時候最高轉速
             useCustomSlidingRotationalSpeed: true
         },
 		Wheel:[
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-1,-0.72,0.15),
-                suspensionRestLength:0.25*2/4,
-                maxSuspensionTravel:0.25*2/4,
+                Position:new THREE.Vector3(-1,-0.72,0.17),
+                suspensionRestLength:0.125,
+                maxSuspensionTravel:0.125,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             },
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-1,0.72,0.15),
-                suspensionRestLength:0.25*2/4,
-                maxSuspensionTravel:0.25*2/4,
+                Position:new THREE.Vector3(-1,0.72,0.17),
+                suspensionRestLength:0.125,
+                maxSuspensionTravel:0.125,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             },
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(1.22,-0.75,0.14),
-                suspensionRestLength:0.25*2/4,
-                maxSuspensionTravel:0.25*2/4,
+                Position:new THREE.Vector3(1.22,-0.75,0.16),
+                suspensionRestLength:0.125,
+                maxSuspensionTravel:0.125,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             },
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(1.22,0.75,0.14),
-                suspensionRestLength:0.25*2/4,
-                maxSuspensionTravel:0.25*2/4,
+                Position:new THREE.Vector3(1.22,0.75,0.16),
+                suspensionRestLength:0.125,
+                maxSuspensionTravel:0.125,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             }
@@ -109,33 +110,27 @@ function WEX(iConfig)
         CameraOptions:{
             Default:{
                 Position:new THREE.Vector3(0,2,5),  //+右-左，+上-下，+後-前
-                SpeedAdd:0.5,
-                SpeedPer:0.2
+                SpeedAdd:new THREE.Vector3(0,0.5,0.5),
+                SpeedPer:new THREE.Vector3(0,1,1),
+                RotationEffect:0.15,
             },
             LookBack:{
-                Position:new THREE.Vector3(0,2,-10),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(0,2,10)
             },
             LookLeft:{
-                Position:new THREE.Vector3(5,2,0),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(0,2,5)
             },
             LookRight:{
-                Position:new THREE.Vector3(-5,2,0),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(0,2,5)
             },
             FOV:{
                 Position:new THREE.Vector3(0,0.75,-0.75),
-                SpeedAdd:0,
-                SpeedPer:0
+                SpeedAdd:new THREE.Vector3(0,0,0.8),
+                SpeedPer:new THREE.Vector3(0,0,0),
+                RotationEffect:0
             },
             Ended:{
-                Position:new THREE.Vector3(1.25,0.5,-4.5),
-                SpeedAdd:0,
-                SpeedPer:0
+                Position:new THREE.Vector3(1.25,0.5,-4.5)
             },
         },
         OnRunCallBack:function(){},
@@ -452,29 +447,47 @@ function WEX(iConfig)
         RightSpotLight.target=TargetObj;
     }
 
-    //排氣管點火
-    var LastThrottleState=false;
-    var ShowBackFireTime=0;
-    var BackFireGroup=new THREE.Group();
-    this.MeshGroup.add(BackFireGroup);
-
-    for(var i=0;i<5;i++)
+    if(Config.HaveBackFire)
     {
-        var material = new THREE.SpriteMaterial({
-            map: FireTexture[i], 
-            color: 0xffffff, 
-            transparent: true,
-            depthWrite: false,
-            depthTest: true
-        });
-        var BackFire = new THREE.Sprite( material );
-        BackFire.position.set(i*0.7,0,0);
-        BackFire.scale.set((i+1)*0.5,(i+1)*0.5,1);
-        BackFireGroup.add(BackFire);
+        //排氣管點火
+        for(var i=0;i<5;i++)
+        {
+            var material = new THREE.SpriteMaterial({
+                map: FireTexture[i], 
+                color: 0xffffff, 
+                transparent: true,
+                depthWrite: false,
+                depthTest: true
+            });
+            var BackFire = new THREE.Sprite( material );
+            BackFire.position.set(i*0.7,0,0);
+            BackFire.scale.set((i+1)*0.4,(i+1)*0.4,1);
+            this.BackFireGroup.add(BackFire);
+        }
+        this.BackFireGroup.position.x=1.8;
+        this.BackFireGroup.position.z=0.15;
+        this.BackFireGroup.scale.set(0.15,0.2,0.2);
+
+        //氮氣點火
+        for(var i=0;i<5;i++)
+        {
+            var material = new THREE.SpriteMaterial({
+                map: BlueFireTexture[i], 
+                color: 0xffffff, 
+                transparent: true,
+                depthWrite: false,
+                depthTest: true
+            });
+            var BackFire = new THREE.Sprite( material );
+            BackFire.position.set(i*0.7,0,0);
+            BackFire.scale.set((i+1)*0.4,(i+1)*0.4,1);
+            this.BackBlueFireGroup.add(BackFire);
+        }
+        this.BackBlueFireGroup.position.x=1.8;
+        this.BackBlueFireGroup.position.z=0.15;
+        this.BackBlueFireGroup.scale.set(0.15,0.2,0.2);
     }
-    BackFireGroup.position.x=2;
-    BackFireGroup.position.z=0.3;
-    BackFireGroup.scale.set(0.1,0.2,0.2);
+    
 
     function TakeBreak(ThisCar)
     {
@@ -526,33 +539,33 @@ function WEX(iConfig)
     var NowSpeed=new THREE.Vector3();
     function RunCallBack(ThisCar)
     {
-        //取得油門狀態
-        var NewThrottleState=ThisCar.GetThrottle();
-        if(NewThrottleState==false && LastThrottleState==true)
+        //console.log(ThisCar.Speed.y);
+
+        if(Config.HaveBackFire)
         {
-            ShowBackFireTime=5;
-        }
-
-        LastThrottleState=NewThrottleState;
-
-        if(ShowBackFireTime>0)
-        {
-            ShowBackFireTime--;
-
-            BackFireGroup.visible=true;
-
-            for(var i=0;i<BackFireGroup.children.length;i++)
+            if(ThisCar.OnBackFireVisible)
             {
-                BackFireGroup.children[i].position.y=RandF(0.2)-0.1;
-                BackFireGroup.children[i].position.z=RandF(0.2)-0.1;
-                BackFireGroup.children[i].material.opacity=RandF(1);
-                BackFireGroup.children[i].material.rotation+=RandF(3);
+                for(var i=0;i<ThisCar.BackFireGroup.children.length;i++)
+                {
+                    ThisCar.BackFireGroup.children[i].position.y=RandF(0.2)-0.1;
+                    ThisCar.BackFireGroup.children[i].position.z=RandF(0.2)-0.1;
+                    ThisCar.BackFireGroup.children[i].material.opacity=RandF(0.7);
+                    ThisCar.BackFireGroup.children[i].material.rotation+=RandF(3);
+                }
+            }
+
+            if(ThisCar.OnBackBlueFireVisible)
+            {
+                for(var i=0;i<ThisCar.BackBlueFireGroup.children.length;i++)
+                {
+                    ThisCar.BackBlueFireGroup.children[i].position.y=RandF(0.2)-0.1;
+                    ThisCar.BackBlueFireGroup.children[i].position.z=RandF(0.2)-0.1;
+                    ThisCar.BackBlueFireGroup.children[i].material.opacity=RandF(0.7);
+                    ThisCar.BackBlueFireGroup.children[i].material.rotation+=RandF(3);
+                }
             }
         }
-        else
-        {
-            BackFireGroup.visible=false;
-        }
+        
 
         //更新輪胎位置
     	for (var i = 0,j=ThisCar.Vehicle.wheelInfos.length; i < j; i++) {
@@ -602,7 +615,7 @@ function WEX(iConfig)
         ReversingLeftLight.visible=ReversingRightLight.visible=(ThisCar.GetNowGear()==0);
 
         //遠光燈
-        if(!Config.Stay && Config.HaveLight)
+        if(!ThisCar.Stay && Config.HaveLight)
         {
             if(CheckKeyBoardPress(UserKeyboardSetting.Bright))
             {

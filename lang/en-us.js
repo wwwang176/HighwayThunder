@@ -46,5 +46,10 @@
     "Arrow left":"Arrow left",
     "Arrow right":"Arrow right",
     "High beam":"High beam",
-    "Reset":"Reset"
+    "Reset":"Reset",
+    
+    "Speed Max":"Top Speed",
+    "Acceleration":"Acceleration",
+    "Braking Stability":"Braking Stability",
+    "Maneuverability":"Handing"
 }

@@ -49,7 +49,7 @@ function Spark(iConfig)
 
     this.ReUse=function(iConfig)
     {
-        if(Math.abs(iConfig.Position.x)>200)
+        if(Math.abs(iConfig.Position.x)>150)
             return;
 
         Config.ColorPer.r=1;
