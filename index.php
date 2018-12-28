@@ -30,6 +30,7 @@
     <script src="Package.js?<?php echo rand(0,9999);?>"></script>
     
     <script src="WEX.js?<?php echo rand(0,9999);?>"></script>
+    <script src="GT.js?<?php echo rand(0,9999);?>"></script>
     <script src="Sedan.js?<?php echo rand(0,9999);?>"></script>
     <script src="Bus.js?<?php echo rand(0,9999);?>"></script>
     <script src="Trailer Truck.js?<?php echo rand(0,9999);?>"></script>
@@ -551,6 +552,7 @@ var PutTrafficCone5000State=false;      //放置交通錐的狀態
 var ScoreCheckDOM=$('#score-check');
 
 var WEXModel=[null,null,null];
+var GTModel=[null,null,null];
 var CarModel=[null,null,null];
 var BusModel=[null,null];
 var TrailerTruckModel=null;
@@ -867,6 +869,8 @@ function LoadResource(CallBack)
     var loader = new THREE.ObjectLoader(LoadingManager);
     loader.load("textures/WEX/wheel-other.json",function (obj){ WEXModel[2]=obj; });
     var loader = new THREE.ObjectLoader(LoadingManager);
+    loader.load("textures/Phoenix GT/model.json",function (obj){ GTModel[0]=obj; });
+    var loader = new THREE.ObjectLoader(LoadingManager);
     loader.load("textures/car/model.json",function (obj){ CarModel[0]=obj; });
     var loader = new THREE.ObjectLoader(LoadingManager);
     loader.load("textures/car/model-L1.json",function (obj){ CarModel[1]=obj; });
@@ -996,7 +1000,7 @@ function InitGarage()
             Braking:0.5,
             Maneuverability:0.62
         },
-        Position:new THREE.Vector3(3.75/2,-8,1)
+        Position:new THREE.Vector3(3.75/2,-10,1)
     });
     GarageAllCar.push(NewCar);
     if(InGarage)
@@ -1005,6 +1009,23 @@ function InitGarage()
         GarageFocusUnit=NewCar;
         GarageCarChange();
     }
+
+    var NewCar=new GT({
+        Ai:false,
+        CanReset:false,
+        Stay:true,
+        Scene:GarageScene,
+        World:GarageWorld,
+        HaveLight:true,
+        GarageScore:{
+            SpeedMax:0.68,
+            Acceleration:0.72,
+            Braking:0.47,
+            Maneuverability:0.43
+        },
+        Position:new THREE.Vector3(3.75/2,-6.5,1)
+    });
+    GarageAllCar.push(NewCar);
 
     var NewCar=new Sedan({
         Ai:false,
@@ -1019,7 +1040,7 @@ function InitGarage()
             Braking:0.53,
             Maneuverability:0.57
         },
-        Position:new THREE.Vector3(2,-4,1)
+        Position:new THREE.Vector3(2,-3.5,1)
     });
     GarageAllCar.push(NewCar);
 
@@ -1343,6 +1364,16 @@ function InitHighway()
             Position:new THREE.Vector3(0,3,2)
         });
     }
+    else if(GarageFocusUnit instanceof GT)
+    {
+        UserCar=new GT({
+            HaveLight:true,
+            HaveBackFire:true,
+            InitSpeed:1,
+            Stay:true,
+            Position:new THREE.Vector3(0,3,2)
+        });
+    }
     else if(GarageFocusUnit instanceof Sedan)
     {
         UserCar=new Sedan({
@@ -1517,6 +1548,7 @@ function AnimateGarage()
 
     GarageRenderer.render(GarageScene, GarageMainCamera);
 
+    //玩家按下左右選單
     if(!KeyBoardPressArray[39] && !KeyBoardPressArray[37])
     {
         GarageKeyNextPervDelay=0;
@@ -1537,6 +1569,12 @@ function AnimateGarage()
             GarageNextCar();
             GarageKeyNextPervDelay=20;
         }
+    }
+
+    //玩家按下Enter
+    if(KeyBoardPressArray[13])
+    {
+        SelectGarageCar();
     }
 
     RequestGarageAnimationFrameContorl=requestAnimationFrame(AnimateGarage);
@@ -1900,6 +1938,8 @@ function AnimateHighway()
                     UserWrongWayDriveScore.Add(0.25*MainFocusUnit.Speed.length()*UserSpeedBonusPer);
                     UserWrongWayDriveScore.Count+=MainFocusUnit.MoveDiff.length();
                     UserTotalScore+=0.25*MainFocusUnit.Speed.length()*UserSpeedBonusPer;
+
+                    MainFocusUnit.AddN2O2(0.1);
                 }
                 //甩尾
                 if(MainFocusUnit.OnDrift)
@@ -1907,6 +1947,8 @@ function AnimateHighway()
                     UserDriftScore.Add(1*MainFocusUnit.Speed.length()*UserSpeedBonusPer);
                     UserDriftScore.Count+=MainFocusUnit.MoveDiff.length();
                     UserTotalScore+=1*MainFocusUnit.Speed.length()*UserSpeedBonusPer;
+
+                    MainFocusUnit.AddN2O2(0.1);
                 }
                 //飛行
                 if(MainFocusUnit.OnFly)
@@ -1914,6 +1956,8 @@ function AnimateHighway()
                     UserFlyScore.Add(4*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer);
                     UserFlyScore.Count+=MainFocusUnit.MoveDiff.length();
                     UserTotalScore+=4*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer;
+
+                    MainFocusUnit.AddN2O2(0.1);
                 }
 
                 //擦身而過
@@ -1959,6 +2003,8 @@ function AnimateHighway()
                         UserCloseDriveScore.Add(10*UserSpeedBonusPer);
                         UserCloseDriveScore.Count++;
                         UserTotalScore+=10*UserSpeedBonusPer;
+
+                        MainFocusUnit.AddN2O2(10);
                     }
                 }
             }
@@ -2281,18 +2327,7 @@ $('#garage-select-car-div .container .perv-car-button').on('click',function(){
 });
 $('#garage-select-car-div .racing-button').on('click',function(){
     
-    InGarage=false;
-
-    $(LoadingDOM).show();
-    $(LoadingInfoDOM).find('.text').html('Cerate World');
-
-    initCannon();
-    InitHighway();
-
-    setTimeout(function(){
-        $(LoadingDOM).hide();
-        SceneChange();
-    },1000);
+    SelectGarageCar();
 });
 $('#goto-garage-button').on('click',function(){
 
@@ -2381,9 +2416,25 @@ function GarageCarChange()
     GarageCarSpeedScoreDOM.css({width:CarScore.SpeedMax*100+'%'});
     GarageCarAccelerationScoreDOM.css({width:CarScore.Acceleration*100+'%'});
     GarageCarBrakingScoreDOM.css({width:CarScore.Braking*100+'%'});
-    GarageCarManeuverabilityScoreDOM.css({width:CarScore.Maneuverability*100+'%'});
-    
+    GarageCarManeuverabilityScoreDOM.css({width:CarScore.Maneuverability*100+'%'});    
 }
+
+function SelectGarageCar()
+{
+    InGarage=false;
+
+    $(LoadingDOM).show();
+    $(LoadingInfoDOM).find('.text').html('Cerate World');
+
+    initCannon();
+    InitHighway();
+
+    setTimeout(function(){
+        $(LoadingDOM).hide();
+        SceneChange();
+    },1000);
+}
+
 function SceneChange()
 {
     cancelAnimationFrame(RequestGarageAnimationFrameContorl);

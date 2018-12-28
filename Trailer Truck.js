@@ -84,7 +84,7 @@ function TrailerTruck(iConfig)
         WheelOptions:{
             radius: 0.55 ,
             directionLocal: new CANNON.Vec3(0, 0, -1),
-            suspensionStiffness: 30,
+            suspensionStiffness: 40,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
             frictionSlip: 3*0.9*0.7*0.7*2,
@@ -102,18 +102,18 @@ function TrailerTruck(iConfig)
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-2,-2.495/2+0.1,-1.6+0.7),
-                suspensionRestLength:0.4,
-                maxSuspensionTravel:0.4,
+                Position:new THREE.Vector3(-2,-2.495/2+0.1,-0.9),
+                suspensionRestLength:0.55,
+                maxSuspensionTravel:0.55,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             },
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-2,2.495/2-0.1,-1.6+0.7),
-                suspensionRestLength:0.4,
-                maxSuspensionTravel:0.4,
+                Position:new THREE.Vector3(-2,2.495/2-0.1,-0.9),
+                suspensionRestLength:0.55,
+                maxSuspensionTravel:0.55,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             },
@@ -138,18 +138,18 @@ function TrailerTruck(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(2.55,-2.495/2+0.1,-1.6+0.7),
-                suspensionRestLength:0.4,
-                maxSuspensionTravel:0.4,
+                Position:new THREE.Vector3(2.55,-2.495/2+0.1,-0.9),
+                suspensionRestLength:0.55,
+                maxSuspensionTravel:0.55,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             },
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(2.55,2.495/2-0.1,-1.6+0.7),
-                suspensionRestLength:0.4,
-                maxSuspensionTravel:0.4,
+                Position:new THREE.Vector3(2.55,2.495/2-0.1,-0.9),
+                suspensionRestLength:0.55,
+                maxSuspensionTravel:0.55,
                 TyreBurnoutTime:0,
                 LastCarTrackPosition:new THREE.Vector3()
             }

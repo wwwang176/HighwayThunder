@@ -56,8 +56,8 @@ function Bus(iConfig)
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
             frictionSlip: 3*0.9*0.7*0.7*2,
-            dampingRelaxation: 2.3,
-            dampingCompression: 4.4,
+            dampingRelaxation: 2.3/2,
+            dampingCompression: 4.4/2,
             maxSuspensionForce: 100000,
             rollInfluence:  /*0.01*/0.25*1.5,
             axleLocal: new CANNON.Vec3(0, 1, 0),
@@ -70,7 +70,7 @@ function Bus(iConfig)
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-3.43,-2.495/2+0.2,-0.7),
+                Position:new THREE.Vector3(-3.43,-2.495/2+0.2,-0.95),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -79,7 +79,7 @@ function Bus(iConfig)
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-3.43,2.495/2-0.2,-0.7),
+                Position:new THREE.Vector3(-3.43,2.495/2-0.2,-0.95),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -88,7 +88,7 @@ function Bus(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(2.73,-2.495/2+0.2,-0.7),
+                Position:new THREE.Vector3(2.73,-2.495/2+0.2,-0.95),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -97,7 +97,7 @@ function Bus(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(2.73,2.495/2-0.2,-0.7),
+                Position:new THREE.Vector3(2.73,2.495/2-0.2,-0.95),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,

@@ -53,7 +53,7 @@ function WEX(iConfig)
             }
         ],
         WheelOptions:{
-            radius: 0.28 ,
+            radius: 0.3136 ,
             directionLocal: new CANNON.Vec3(0, 0, -1),
             suspensionStiffness: 30,
             //suspensionRestLength: 0.5,
@@ -73,7 +73,7 @@ function WEX(iConfig)
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-1,-0.72,0.17),
+                Position:new THREE.Vector3(-1.11,-0.81,0.17),
                 suspensionRestLength:0.125,
                 maxSuspensionTravel:0.125,
                 TyreBurnoutTime:0,
@@ -82,7 +82,7 @@ function WEX(iConfig)
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-1,0.72,0.17),
+                Position:new THREE.Vector3(-1.11,0.81,0.17),
                 suspensionRestLength:0.125,
                 maxSuspensionTravel:0.125,
                 TyreBurnoutTime:0,
@@ -91,7 +91,7 @@ function WEX(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(1.22,-0.75,0.16),
+                Position:new THREE.Vector3(1.36,-0.84,0.16),
                 suspensionRestLength:0.125,
                 maxSuspensionTravel:0.125,
                 TyreBurnoutTime:0,
@@ -100,7 +100,7 @@ function WEX(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(1.22,0.75,0.16),
+                Position:new THREE.Vector3(1.36,0.84,0.16),
                 suspensionRestLength:0.125,
                 maxSuspensionTravel:0.125,
                 TyreBurnoutTime:0,
@@ -109,7 +109,7 @@ function WEX(iConfig)
         ],
         CameraOptions:{
             Default:{
-                Position:new THREE.Vector3(0,2,5),  //+右-左，+上-下，+後-前
+                Position:new THREE.Vector3(0,2,5.5),  //+右-左，+上-下，+後-前
                 SpeedAdd:new THREE.Vector3(0,0.5,0.5),
                 SpeedPer:new THREE.Vector3(0,1,1),
                 RotationEffect:0.15,
@@ -124,7 +124,7 @@ function WEX(iConfig)
                 Position:new THREE.Vector3(0,2,5)
             },
             FOV:{
-                Position:new THREE.Vector3(0,0.75,-0.75),
+                Position:new THREE.Vector3(0,0.84,-0.84),
                 SpeedAdd:new THREE.Vector3(0,0,0.8),
                 SpeedPer:new THREE.Vector3(0,0,0),
                 RotationEffect:0
@@ -149,30 +149,30 @@ function WEX(iConfig)
 
     var ThisCar=this;
 
-    this.BodySize=new CANNON.Vec3(3.75,1.7,10);
+    this.BodySize=new CANNON.Vec3(4.2,1.9,10);
 
-    /*var geometry = new THREE.BoxBufferGeometry(3.7-0.6, 1.6, 0.5);
+    /*var geometry = new THREE.BoxBufferGeometry(4.14-0.6, 1.85, 0.5);
 	var material = new THREE.MeshLambertMaterial( {color: 0xCCCCCC} );
     var cube = new THREE.Mesh( geometry, material );
     cube.position.set(0,0,0.3);
     this.MeshGroup.add(cube);
     
-    var geometry = new THREE.BoxBufferGeometry(2, 1.4, 0.4);
+    var geometry = new THREE.BoxBufferGeometry(2.24, 1.56, 0.45);
 	var material = new THREE.MeshLambertMaterial( {color: 0xCCCCCC} );
     var cube = new THREE.Mesh( geometry, material );
-    cube.position.set(0.5,0,0.6);
+    cube.position.set(0.56,0,0.67);
     this.MeshGroup.add(cube);
     
-    var geometry = new THREE.CylinderBufferGeometry(0.6/2,0.6/2,1.6);
+    var geometry = new THREE.CylinderBufferGeometry(0.6/2,0.6/2,1.85);
 	var material = new THREE.MeshLambertMaterial( {color: 0xCCCCCC} );
     var cube = new THREE.Mesh( geometry, material );
-    cube.position.set(-1.55,0,0.3);
+    cube.position.set(-1.74,0,0.3);
     this.MeshGroup.add(cube);
     
-    var geometry = new THREE.CylinderBufferGeometry(0.6/2,0.6/2,1.6);
+    var geometry = new THREE.CylinderBufferGeometry(0.6/2,0.6/2,1.85);
 	var material = new THREE.MeshLambertMaterial( {color: 0xCCCCCC} );
     var cube = new THREE.Mesh( geometry, material );
-    cube.position.set(1.55,0,0.3);
+    cube.position.set(1.74,0,0.3);
     this.MeshGroup.add(cube);*/
     
 	
@@ -188,7 +188,7 @@ function WEX(iConfig)
     var WheelModel=DeepClone(WEXModel[1]);
     var WheelOtherModel=DeepClone(WEXModel[2]);
 
-    ModelRight.position.z=-0.837*2; //0.4185
+    ModelRight.position.z=-0.9398*2; //0.4185
     ModelRight.scale.y*=-1;
     
     var CarModelGroup=new THREE.Group();
@@ -196,8 +196,8 @@ function WEX(iConfig)
     CarModelGroup.add(ModelRight);
     
     CarModelGroup.rotation.x=90*Math.PI/180;
-    CarModelGroup.position.x=-3.75/2;
-    CarModelGroup.position.y=-0.837;
+    CarModelGroup.position.x=-4.1993/2;
+    CarModelGroup.position.y=-0.9398;
     this.LOD.addLevel(CarModelGroup,0);
 
     var CarBodyLeftMesh=ModelLeft.getObjectByName('group_10');
@@ -207,18 +207,28 @@ function WEX(iConfig)
     var LeftSpoilerMesh=ModelLeft.getObjectByName('group_6');
     var RightSpoilerMesh=ModelRight.getObjectByName('group_6');
     var SpoilerPositionZMin=LeftSpoilerMesh.position.z*1;
-    var SpoilerPositionZMax=28;
+    var SpoilerPositionZMax=SpoilerPositionZMin+3;
     var NowSpoilerPositionZ=SpoilerPositionZMin*1;
     
     //CarBodyLeftMesh.children[1].material.color=new THREE.Color(0x333333);
     //CarBodyRightMesh.children[1].material.color=new THREE.Color(0x333333);
     
+    /*console.log(CarBodyLeftMesh.children[1].material);
+    CarBodyLeftMesh.children[1].material=new THREE.MeshPhysicalMaterial({
+        color:CarBodyLeftMesh.children[1].material.color,
+        map:CarBodyLeftMesh.children[1].material.map
+    });
+    console.log(CarBodyLeftMesh.children[1]);*/
+
+    CarBodyLeftMesh.children[1].geometry.computeVertexNormals(true);
+    CarBodyRightMesh.children[1].geometry.computeVertexNormals(true);
+    
 
     var CarModelL1Group=new THREE.Group();
     CarModelL1Group.add(DeepClone(CarModel[1]));
     CarModelL1Group.rotation.x=90*Math.PI/180;
-    CarModelL1Group.position.x=-3.75/2;
-    CarModelL1Group.position.y=-0.837;
+    CarModelL1Group.position.x=-4.1993/2;
+    CarModelL1Group.position.y=-0.9398;
     this.LOD.addLevel(CarModelL1Group,75);
 
     var CarModelL2Group=new THREE.Group();
@@ -240,14 +250,14 @@ function WEX(iConfig)
     };
 
 
-    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(3.1/2,1.6/2,0.5/2)),new CANNON.Vec3(0,0,0.3));
+    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(3.54/2,1.85/2,0.5/2)),new CANNON.Vec3(0,0,0.3));
 
     var q = new CANNON.Quaternion();
     q.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI / 2);
-    this.Body.addShape(new CANNON.Cylinder(0.6/2,0.6/2,1.6,4),new CANNON.Vec3(-1.55,0,0.3),q);
-    this.Body.addShape(new CANNON.Cylinder(0.6/2,0.6/2,1.6,4),new CANNON.Vec3(1.55,0,0.3),q);
+    this.Body.addShape(new CANNON.Cylinder(0.6/2,0.6/2,1.85,4),new CANNON.Vec3(-1.74,0,0.3),q);
+    this.Body.addShape(new CANNON.Cylinder(0.6/2,0.6/2,1.85,4),new CANNON.Vec3(1.74,0,0.3),q);
     
-    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(2/2,1.4/2,0.4/2)),new CANNON.Vec3(0.5,0,0.6));
+    this.Body.addShape(new CANNON.Box(new CANNON.Vec3(2.24/2,1.56/2,0.45/2)),new CANNON.Vec3(0.56,0,0.67));
     
     //煞車模型
     this.WheelBrakeMashArray=[];
@@ -294,7 +304,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var BRLight = new THREE.Sprite( material );
-    BRLight.position.set(2,0.46,0.52);
+    BRLight.position.set(2.1,0.46,0.52);
     BRLight.scale.set(3,3,3);
     this.MeshGroup.add(BRLight);
 
@@ -307,7 +317,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var BLLight = new THREE.Sprite( material );
-    BLLight.position.set(2,-0.46,0.52);
+    BLLight.position.set(2.1,-0.46,0.52);
     BLLight.scale.set(3,3,3);
     this.MeshGroup.add(BLLight);
 
@@ -321,7 +331,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var FRLight = new THREE.Sprite( material );
-    FRLight.position.set(-1.9,0.46,0.338);
+    FRLight.position.set(-2.13,0.46,0.338);
     FRLight.scale.set(5,5,5);
     this.MeshGroup.add(FRLight);
 
@@ -334,7 +344,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var FLLight = new THREE.Sprite( material );
-    FLLight.position.set(-1.9,-0.46,0.338);
+    FLLight.position.set(-2.13,-0.46,0.338);
     FLLight.scale.set(5,5,5);
     this.MeshGroup.add(FLLight);
 
@@ -348,7 +358,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var BRSignalLight = new THREE.Sprite( material );
-    BRSignalLight.position.set(2.1,0.6,0.52);
+    BRSignalLight.position.set(2.34,0.6,0.52);
     BRSignalLight.scale.set(3,3,3);
     BRSignalLight.visible=false;
     this.MeshGroup.add(BRSignalLight);
@@ -362,7 +372,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var BLSignalLight = new THREE.Sprite( material );
-    BLSignalLight.position.set(2.1,-0.6,0.52);
+    BLSignalLight.position.set(2.34,-0.6,0.52);
     BLSignalLight.scale.set(3,3,3);
     BLSignalLight.visible=false;
     this.MeshGroup.add(BLSignalLight);
@@ -377,7 +387,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var FRSignalLight = new THREE.Sprite( material );
-    FRSignalLight.position.set(-2,0.6,0.338);
+    FRSignalLight.position.set(-2.23,0.6,0.338);
     FRSignalLight.scale.set(3,3,3);
     FRSignalLight.visible=false;
     this.MeshGroup.add(FRSignalLight);
@@ -391,7 +401,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var FLSignalLight = new THREE.Sprite( material );
-    FLSignalLight.position.set(-2,-0.6,0.338);
+    FLSignalLight.position.set(-2.23,-0.6,0.338);
     FLSignalLight.scale.set(3,3,3);
     FLSignalLight.visible=false;
     this.MeshGroup.add(FLSignalLight);
@@ -406,7 +416,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var ReversingRightLight = new THREE.Sprite( material );
-    ReversingRightLight.position.set(2.1,0.5,0.51);
+    ReversingRightLight.position.set(2.2,0.5,0.51);
     ReversingRightLight.scale.set(2,2,2);
     ReversingRightLight.visible=false;
     this.MeshGroup.add(ReversingRightLight);
@@ -420,7 +430,7 @@ function WEX(iConfig)
         depthTest: true
     });
     var ReversingLeftLight = new THREE.Sprite( material );
-    ReversingLeftLight.position.set(2.1,-0.5,0.51);
+    ReversingLeftLight.position.set(2.2,-0.5,0.51);
     ReversingLeftLight.scale.set(2,2,2);
     ReversingLeftLight.visible=false;
     this.MeshGroup.add(ReversingLeftLight);
@@ -429,7 +439,7 @@ function WEX(iConfig)
     if(Config.HaveLight)
     {
         var LeftSpotLight = new THREE.SpotLight(0xffffff, 1, 30, Math.PI/4, 0.3);
-        LeftSpotLight.position.set(-2,-0.46,0.35);
+        LeftSpotLight.position.set(-2.13,-0.46,0.35);
         this.MeshGroup.add( LeftSpotLight );
 
         var TargetObj=new THREE.Object3D();
@@ -438,7 +448,7 @@ function WEX(iConfig)
         LeftSpotLight.target=TargetObj;
         
         var RightSpotLight = new THREE.SpotLight(0xffffff, 1, 30, Math.PI/4, 0.3);
-        RightSpotLight.position.set(-2,0.46,0.35);
+        RightSpotLight.position.set(-2.13,0.46,0.35);
         this.MeshGroup.add( RightSpotLight );
 
         var TargetObj=new THREE.Object3D();
@@ -464,8 +474,8 @@ function WEX(iConfig)
             BackFire.scale.set((i+1)*0.4,(i+1)*0.4,1);
             this.BackFireGroup.add(BackFire);
         }
-        this.BackFireGroup.position.x=1.8;
-        this.BackFireGroup.position.z=0.15;
+        this.BackFireGroup.position.x=2.016;
+        this.BackFireGroup.position.z=0.16;
         this.BackFireGroup.scale.set(0.15,0.2,0.2);
 
         //氮氣點火
@@ -483,8 +493,8 @@ function WEX(iConfig)
             BackFire.scale.set((i+1)*0.4,(i+1)*0.4,1);
             this.BackBlueFireGroup.add(BackFire);
         }
-        this.BackBlueFireGroup.position.x=1.8;
-        this.BackBlueFireGroup.position.z=0.15;
+        this.BackBlueFireGroup.position.x=2.016;
+        this.BackBlueFireGroup.position.z=0.16;
         this.BackBlueFireGroup.scale.set(0.15,0.2,0.2);
     }
     
@@ -581,7 +591,9 @@ function WEX(iConfig)
                 t.quaternion.w=1;
             }
 
+            //輪胎半徑超過0.28則會出現錯誤
             ThisCar.WheelBrakeMashArray[i].position.copy(t.position);
+            ThisCar.WheelBrakeMashArray[i].position.z+=0.0168;
             ThisCar.WheelBrakeMashArray[i].quaternion.copy(ThisCar.Body.quaternion);
 
             if(!isNaN(ThisCar.Vehicle.wheelInfos[i].steering))

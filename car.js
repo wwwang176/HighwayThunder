@@ -13,7 +13,9 @@ function Car(iConfig)
         SteerAddLinear:0.5,             //轉向線性化
         AiSteerAdd:22.5,                //Ai轉向速度
         AiSteerAddLinear:0,             //Ai轉向線性化
-		O2N2Max:60*5,					//氮氣最大量
+        O2N2Max:60*5,					//氮氣最大量
+        DriftLimit:3,                 //輪胎側滑臨界值，越高越不容易側滑
+        DriftControl:1,              //前輪摩擦力加權(數字小甩尾困難，數字大轉向過度)
         AutoGear:false,					//是否是自排
         Gear:[							//齒輪設定
             {
@@ -185,6 +187,7 @@ function Car(iConfig)
     var NowClutchPer=0;             //目前離合器百分比
     this.EngineOverRunning=false;   //引擎是否超轉中
     var EngineOverRunningDelayTime=0;   //引擎超轉時油門延遲
+    var KeyUseN2O2=false;           //是否按下使用氮氣
     var UseN2O=false;               //是否使用氮氣
 
     this.OnThrottleUp=false;        //是否踩油門
@@ -227,6 +230,7 @@ function Car(iConfig)
     var wheelBodies = [];           //輪胎物件(cannon.js)
     this.OnDrift=false;             //是否甩尾中
     this.OnFly=false;               //是否飛行中
+    var WheelRadiusFix=0;           //輪胎修正量
 
     this.MeshGroup=new THREE.Group();
     Config.Scene.add(this.MeshGroup);
@@ -279,6 +283,10 @@ function Car(iConfig)
 
     //建構車輪----------
 
+    var DisplayWheelSize=Config.WheelOptions.radius*1;
+    WheelRadiusFix=(Config.WheelOptions.radius-0.28);
+    Config.WheelOptions.radius=0.28;
+
     for(var i=0,len=Config.Wheel.length;i<len;i++)
     {
         Config.WheelOptions.chassisConnectionPointLocal.set(Config.Wheel[i].Position.x,Config.Wheel[i].Position.y,Config.Wheel[i].Position.z);
@@ -292,7 +300,8 @@ function Car(iConfig)
         var Wheel = this.Vehicle.wheelInfos[i];
         Wheel.UserDataSpeed=0;
 
-        var cylinderShape = new CANNON.Cylinder(Wheel.radius, Wheel.radius, Wheel.radius / 2, 10);
+        //var cylinderShape = new CANNON.Cylinder(Wheel.radius, Wheel.radius, Wheel.radius / 2, 10);
+        var cylinderShape = new CANNON.Cylinder(DisplayWheelSize, DisplayWheelSize, DisplayWheelSize / 2, 10);
 
         var WheelBody = new CANNON.Body({ mass: 5,materal:wheelMaterial });
         var q = new CANNON.Quaternion();
@@ -302,17 +311,17 @@ function Car(iConfig)
 
         var WheelLOD=new THREE.LOD();
 
-        Geometry=new THREE.CylinderBufferGeometry(Wheel.radius,Wheel.radius,Wheel.radius / 2,10);
+        Geometry=new THREE.CylinderBufferGeometry(DisplayWheelSize,DisplayWheelSize,DisplayWheelSize / 2,10);
         Material=new THREE.MeshLambertMaterial({color:0x333333});
         var WheelMash=new THREE.Mesh(Geometry,Material);
         WheelLOD.addLevel(WheelMash,0);
         
-        Geometry=new THREE.CylinderBufferGeometry(Wheel.radius,Wheel.radius,Wheel.radius / 2,5);
+        Geometry=new THREE.CylinderBufferGeometry(DisplayWheelSize,DisplayWheelSize,DisplayWheelSize / 2,5);
         Material=new THREE.MeshLambertMaterial({color:0x333333});
         var WheelMashL1=new THREE.Mesh(Geometry,Material);
         WheelLOD.addLevel(WheelMashL1,100);
         
-        Geometry=new THREE.CylinderBufferGeometry(Wheel.radius,Wheel.radius,Wheel.radius / 2,3);
+        Geometry=new THREE.CylinderBufferGeometry(DisplayWheelSize,DisplayWheelSize,DisplayWheelSize / 2,3);
         Material=new THREE.MeshLambertMaterial({color:0x333333});
         var WheelMashL2=new THREE.Mesh(Geometry,Material);
         WheelLOD.addLevel(WheelMashL2,150);
@@ -656,6 +665,16 @@ function Car(iConfig)
     		return 0;
     };
 
+    //增加氮氣
+    this.AddN2O2=function(Count=0){
+
+        if(KeyUseN2O2)return;
+
+        this.NowO2N2+=Count;
+        if(this.NowO2N2>this.O2N2Max)
+            this.NowO2N2=this.O2N2Max;
+    };
+
     //取得目前引擎轉速百分比
     this.GetEngineSpeedPer=function(){
         return NowEngineSpeedPer;
@@ -756,19 +775,27 @@ function Car(iConfig)
         this.UpdateEngineSpeedPer();
 
         //是否使用氮氣
+        KeyUseN2O2=false;
         UseN2O=false;
         if(!this.Stay && !this.IsAi && !SystemGameOver && KeyBoardPressArray[38])
-            UseN2O=CheckKeyBoardPress(UserKeyboardSetting.N2O);
+            KeyUseN2O2=CheckKeyBoardPress(UserKeyboardSetting.N2O);
 
         //消耗氮氣
-        if(UseN2O)
+        if(KeyUseN2O2)
         {
-            this.NowO2N2-=1*SystemStepPer;
-            if(this.NowO2N2<0)
+            if(this.NowO2N2>=1*SystemStepPer)
             {
-                this.NowO2N2=0;
-                UseN2O=false;
+                this.NowO2N2-=1*SystemStepPer;
+                UseN2O=true;
+
+                if(this.NowO2N2<=0)
+                {
+                    this.NowO2N2=0;
+                    UseN2O=false;
+                }
             }
+            else 
+                UseN2O=false;
         }
         //依據車輛速度補充氮氣
         else
@@ -1183,6 +1210,7 @@ function Car(iConfig)
             wheelBody.quaternion.copy(t.quaternion);
 
             this.WheelMashArray[i].position.copy(t.position);
+            this.WheelMashArray[i].position.z+=WheelRadiusFix;
             this.WheelMashArray[i].quaternion.copy(t.quaternion);
         }
 
@@ -1208,7 +1236,7 @@ function Car(iConfig)
                 if(!this.OnDrift && 
                     Config.Wheel[i].Power && 
                     this.Vehicle.wheelInfos[i].skidInfo<1 && 
-                    Math.abs(this.Speed.y)>0.125)
+                    Math.abs(this.Speed.y)>0.05)
                 this.OnDrift=true;
 
                 //是否離地飛行
@@ -1309,19 +1337,31 @@ function Car(iConfig)
         //草地打滑
         //if(MainFocusUnit==ThisCar)
         {
+            var FrictionSlipValue=0;
             var SpeedAdd=this.SpeedLength+0.5;
             if(SpeedAdd>1)SpeedAdd=1;
 
             for(var i=0,len=Config.Wheel.length;i<len;i++)
             {
+                //草地
                 if(this.Vehicle.wheelInfos[i].raycastResult.hasHit && Math.abs(this.Vehicle.wheelInfos[i].raycastResult.hitPointWorld.y)<1.25)
                 {
-                    this.Vehicle.wheelInfos[i].frictionSlip=FrictionSlipMax*0.2*SpeedAdd;
+                    FrictionSlipValue=FrictionSlipMax*0.2*SpeedAdd;
+                }
+                //側滑
+                else if(this.Vehicle.wheelInfos[i].raycastResult.hasHit && Math.abs(this.Speed.y)>Config.DriftLimit)
+                {
+                    if(Config.Wheel[i].Power)
+                        FrictionSlipValue=FrictionSlipMax*1*SpeedAdd;
+                    else 
+                        FrictionSlipValue=FrictionSlipMax*1*Config.DriftControl*SpeedAdd;
                 }
                 else
                 {
-                    this.Vehicle.wheelInfos[i].frictionSlip=FrictionSlipMax*SpeedAdd;
+                    FrictionSlipValue=FrictionSlipMax*SpeedAdd;
                 }
+
+                this.Vehicle.wheelInfos[i].frictionSlip=FrictionSlipValue;
             }
         }
         
