@@ -385,7 +385,7 @@
             <svg id="O2N2-svg" width="150" height="150" viewBox="0 0 150 150">
                 <circle cx="0" cy="150" r="110" fill="none" stroke="#CCC" stroke-width="10" stroke-opacity="0.5" />
                 <circle cx="0" cy="150" r="110" id="O2N2" fill="none" stroke="#fff" stroke-width="10"
-                    stroke-dasharray="690.8" stroke-dashoffset="-690.8" />
+                    stroke-dasharray="690.8" stroke-dashoffset="-518.1" />
             </svg>
 
             <svg id="Gear-svg" width="150" height="150" viewBox="0 0 150 150">
@@ -415,6 +415,7 @@ var MainCameraPosition = new THREE.Vector3();
 var KeyBoardPressArray=new Array(); 	        //鍵盤按鍵
 var MousePressArray=new Array();		        //滑鼠按鍵
 var NightMode=true;                             //夜間模式
+var RefugeIsland=false;                         //是否有中央分隔島
 
 var UserKeyboardSetting=new KeyboardSetting({});//使用者鍵盤設定
 var UserEnvironmentSetting;                     //使用者環境設定
@@ -470,11 +471,13 @@ var SunLight;
 var HUDSpeedKmDiv=$('#hud #speed .km');
 var HUDSpeedDiffDiv=$('#hud #speed .add');
 var HUDRPMDiv=$('#hud .engine #bar');
-var HUDRPMSvgstrokeDashoffsetMin=$(HUDRPMDiv).attr('r')*2*Math.PI*(3/4);
-var HUDRPMSvgstrokeDashoffsetMax=$(HUDRPMDiv).attr('r')*2*Math.PI;
+var HUDRPMLength=$(HUDRPMDiv).attr('r')*2*Math.PI/4;
+//var HUDRPMSvgstrokeDashoffsetMin=$(HUDRPMDiv).attr('r')*2*Math.PI*(3/4);
+//var HUDRPMSvgstrokeDashoffsetMax=$(HUDRPMDiv).attr('r')*2*Math.PI;
 var HUDO2N2BarDiv=$('#hud .engine #O2N2');
-var HUDO2N2BarstrokeDashoffsetMin=$(HUDO2N2BarDiv).attr('r')*2*Math.PI*(3/4);
-var HUDO2N2BarstrokeDashoffsetMax=$(HUDO2N2BarDiv).attr('r')*2*Math.PI;
+var HUDO2N2Length=$(HUDO2N2BarDiv).attr('r')*2*Math.PI/4;
+//var HUDO2N2BarstrokeDashoffsetMin=$(HUDO2N2BarDiv).attr('r')*2*Math.PI*(3/4);
+//var HUDO2N2BarstrokeDashoffsetMax=$(HUDO2N2BarDiv).attr('r')*2*Math.PI;
 var HUDGearBarDiv=$('#hud .engine #Gear');
 var HUDGearBarBgDiv=$('#hud .engine #Gear-bg');
 var HUDGearBarLength=$(HUDGearBarDiv).attr('r')*2*Math.PI/4;
@@ -845,6 +848,21 @@ function initCannon(){
     RGroundBody2.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI/4);
     world.addBody(RGroundBody2);
 
+
+    //中央分隔島
+    if(RefugeIsland)
+    {
+        var CenterShape = new CANNON.Box(new CANNON.Vec3(1000/2,0.5/2,0.5/2),new CANNON.Vec3(0,0,0));
+        var CenterBody = new CANNON.Body({
+            mass: 0,
+            material:WallMaterial
+        });
+        //CenterBody.position.z=0.25;
+        CenterBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),Math.PI/4);
+        CenterBody.addShape(CenterShape);
+        world.addBody(CenterBody);
+    }
+    
 }
 
 function LoadResource(CallBack)
@@ -1187,6 +1205,17 @@ function InitHighway()
     RWalldMash.rotation.x=90*Math.PI/180;
     RWalldMash.receiveShadow=true;  //接收陰影
     Scene.add(RWalldMash);
+
+    //分隔島
+    if(RefugeIsland)
+    {
+        Geometry=new THREE.BoxBufferGeometry(1000,0.5,0.5);  //長500公尺
+        Material=new THREE.MeshPhongMaterial({color:0xcccccc});
+        var CenterMash=new THREE.Mesh(Geometry,Material);
+        //CenterMash.position.z=0.25;
+        CenterMash.rotation.x=Math.PI/4;
+        Scene.add(CenterMash);
+    }
 
     //Renderer
     Renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
@@ -1840,17 +1869,22 @@ function AnimateHighway()
             //HUDSpeedDiffDiv.html(Math.round((DisplayUnit.Speed.x-HUDLastSpeed)*-3.6*60*60*10)/10);
 
             //O2N2
-            var Max=-HUDO2N2BarstrokeDashoffsetMin;
+            /*var Max=-HUDO2N2BarstrokeDashoffsetMin;
             var Min=-HUDO2N2BarstrokeDashoffsetMax;
             var Value=(Max-Min)*(DisplayUnit.GetO2N2Per())+Min;
-            HUDO2N2BarDiv.css({strokeDashoffset:Value});
+            HUDO2N2BarDiv.css({strokeDashoffset:Value});*/
+            DisplayUnit.MathO2N2DashArray();
+            HUDO2N2BarDiv.css({'stroke-dasharray':DisplayUnit.O2N2DashArrayData});
 
             //RPM
-            HUDLastPRMPer=HUDLastPRMPer*0.7+DisplayUnit.GetEngineSpeedPer()*0.3;
+            /*HUDLastPRMPer=HUDLastPRMPer*0.7+DisplayUnit.GetEngineSpeedPer()*0.3;
             var Max=-(HUDRPMSvgstrokeDashoffsetMin)-30;
             var Min=-(HUDRPMSvgstrokeDashoffsetMax)+30;
             var Value=(Max-Min)*(HUDLastPRMPer)+Min;
             HUDRPMDiv.css({strokeDashoffset:Value,stroke:(HUDLastPRMPer>=DisplayUnit.BestGearPer)?'#f00':'#fff'});
+            */
+            HUDLastPRMPer=DisplayUnit.MathPRMDashArray();
+            HUDRPMDiv.css({'stroke-dasharray':DisplayUnit.RPMDashArrayData,stroke:DisplayUnit.RPMStrokeColor});
 
             //GEAR
             //console.log(DisplayUnit.NowGearDashArrayData);

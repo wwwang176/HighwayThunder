@@ -1,5 +1,15 @@
 # Changelog
 
+## 2018-12-31
+### Added
+* N/A
+### Changed
+* 自排車輛現在會以退檔優先，且甩尾或飛行時不會進檔，保持車輛加速性
+### Removed
+* N/A
+### Fixed
+* 修正Safari 引擎轉速與氮氣HUD錯誤
+
 ## 2018-12-27
 ### Added
 * 新增車輛「Phoenix GT」

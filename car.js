@@ -440,6 +440,27 @@ function Car(iConfig)
         return NewGear;
     };
 
+    //計算RPM SVG
+    this.RPMStrokeColor='#ffffff';
+    this.RPMDashArrayData='0 '+HUDRPMLength+' 0';
+    var LastRPMValue=0,RPMValue=0,RPMMin=0.2,RPMMax=0.85;
+    this.MathPRMDashArray=function(){
+
+        RPMValue=NowEngineSpeedPer*0.3+LastRPMValue*0.7;
+        LastRPMValue=RPMValue*1;
+        this.RPMDashArrayData='0 '+(HUDRPMLength*(1-(RPMValue*(RPMMax-RPMMin)+RPMMin)))+' '+(HUDRPMLength*(RPMValue*(RPMMax-RPMMin)+RPMMin));
+        this.RPMStrokeColor=(RPMValue>=this.BestGearPer)?'#ff0000':'#ffffff';
+
+        return RPMValue;
+    };
+    //this.MathPRMDashArray();
+
+    this.O2N2DashArrayData='0 '+HUDO2N2Length+' 0';
+    this.MathO2N2DashArray=function(){
+        this.O2N2DashArrayData='0 '+(HUDO2N2Length*(1-this.GetO2N2Per()))+' '+(HUDO2N2Length*(this.GetO2N2Per()));
+    };
+    //this.MathO2N2DashArray();
+
     //計算HUD檔位SVG
     var ReverseGearCount=1;
     this.AllGearDashArrayData=HUDGearBarLength+' 0';    //所有檔位SVG
@@ -840,8 +861,21 @@ function Car(iConfig)
     	//自排
 	    else
 	    {
+            //如果引擎低轉速則準備降檔
+            if(NowGear-1>=1 && -this.Speed.x*60*3.6<Config.Gear[NowGear-1].TargetSpeed*0.8)
+            {
+                AutoGearDelayTime+=1*SystemStepPer;
+
+                //降檔
+                if(AutoGearDelayTime>AutoGearDelayTimeMax)
+                {
+                    AutoGearDelayTime=0;
+                    this.PervGear();
+                    this.UpdateEngineSpeedPer();
+                }
+            }
             //如果引擎高轉速則準備進檔
-            if(NowEngineSpeedPer>this.BestGearPer)
+            else if(NowEngineSpeedPer>this.BestGearPer && !this.OnDrift && !this.OnFly)
             {
                 AutoGearDelayTime+=1;
 
@@ -853,19 +887,6 @@ function Car(iConfig)
                 {
                     AutoGearDelayTime=0;
                     this.NextGear();
-                    this.UpdateEngineSpeedPer();
-                }
-            }
-            //如果引擎低轉速則準備降檔
-            else if(NowGear-1>=1 && -this.Speed.x*60*3.6<Config.Gear[NowGear-1].TargetSpeed*0.8)
-            {
-                AutoGearDelayTime+=1*SystemStepPer;
-
-                //降檔
-                if(AutoGearDelayTime>AutoGearDelayTimeMax)
-                {
-                    AutoGearDelayTime=0;
-                    this.PervGear();
                     this.UpdateEngineSpeedPer();
                 }
             }
