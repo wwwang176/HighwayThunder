@@ -12,6 +12,8 @@ function TrafficCone(iConfig)
     this.prototype=Object.create(Package.prototype);
     Package.call(this,Config);
 
+    this.Body.material=TrafficConeMaterial;
+
     this.BodySize=new CANNON.Vec3(0.5,0.5,1);
 
     var cylinderShape = new CANNON.Cylinder(0.05,0.5,1,4);

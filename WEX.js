@@ -133,6 +133,22 @@ function WEX(iConfig)
                 Position:new THREE.Vector3(1.25,0.5,-4.5)
             },
         },
+        SoundOptions:{
+            ChangeGearVolumeDelay:15,
+            ScreamPlaybackRate:[1,0.4],     //煞車聲設定
+            Samples:[
+                /*['sound/WEX/EXH_803_P.wav',0],
+                ['sound/WEX/EXH_1579_P.wav',0.25],
+                ['sound/WEX/EXH_3324_P.wav',0.5],
+                ['sound/WEX/EXH_4989_P.wav',0.75],
+                ['sound/WEX/EXH_7487_P.wav',1]*/
+                [1,0.3],
+                [0.7,0.5],
+                [0.8,0.5],
+                
+                //['sound/load1.wav',0.7,0.3]
+            ]
+        },
         OnRunCallBack:function(){},
         RunCallBack:RunCallBack,
         TakeBreak:TakeBreak,
@@ -497,7 +513,20 @@ function WEX(iConfig)
         this.BackBlueFireGroup.position.z=0.16;
         this.BackBlueFireGroup.scale.set(0.15,0.2,0.2);
     }
-    
+
+    //設定聲音
+    for(var i=0;i<WEXSoundBuffer.length;i++)
+    {
+        var Sound=new THREE.PositionalAudio(MainListener);
+        Sound.setBuffer(WEXSoundBuffer[i]);
+        //Sound.setLoop(true);
+        //Sound.setMaxDistance(20);
+        Sound.setRefDistance(0.4);
+        //Sound.setDistanceModel('linear');
+        
+        this.EngineSoundArray.push(Sound);
+        this.MeshGroup.add(Sound);
+    }
 
     function TakeBreak(ThisCar)
     {
@@ -707,9 +736,35 @@ function WEX(iConfig)
         ShowBackFireTime=5;
     }
 
+    var HitPosition=new THREE.Vector3(0,0,0);
+    var HitMaterial=null;
 	this.Body.addEventListener("collide",function(e){
 
         var relativeVelocity=e.contact.getImpactVelocityAlongNormal();
+        
+        if(MainFocusUnit==ThisCar)
+        {
+            if(e.contact.bi==ThisCar.Body)
+            {
+                HitPosition.set(
+                    e.contact.bi.position.x + e.contact.ri.x,
+                    e.contact.bi.position.y + e.contact.ri.y,
+                    e.contact.bi.position.z + e.contact.ri.z);
+                
+                HitMaterial=e.contact.bj.material;
+            }
+            else
+            {
+                HitPosition.set(
+                    e.contact.bj.position.x + e.contact.rj.x,
+                    e.contact.bj.position.y + e.contact.rj.y,
+                    e.contact.bj.position.z + e.contact.rj.z);
+                
+                HitMaterial=e.contact.bi.material;
+            }
+
+            PlayCrashSound(relativeVelocity,HitMaterial,HitPosition);
+        }
 
         if(Math.abs(relativeVelocity)>1)
         {

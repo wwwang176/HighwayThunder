@@ -144,6 +144,16 @@ function Car(iConfig)
                 Position:new THREE.Vector3(1.25,0.5,-4.5)
             },
         },
+        HaveSound:false,
+        SoundOptions:{
+            ChangeGearVolumeDelay:30,       //換檔延遲
+            ScreamPlaybackRate:[1,0.4],     //煞車聲設定
+            Samples:[                       //引擎聲音設定[基礎pitch,拉轉增加的pitch]
+                [1,0.3],
+                [0.7,0.3],
+                [0.7,0.5]
+            ]
+        },
         OnReady2ResetCallBack:function(){},
         Ready2ResetCallBack:function(){},
         OnResetCallBack:function(){},
@@ -175,6 +185,8 @@ function Car(iConfig)
     this.UserOnReset=false;         //玩家要求重置中
     this.UserOnResetTime=0;         //玩家要求重置延遲
     this.Stay=Config.Stay;          //是否不能動
+    var HaveSound=Config.HaveSound; //是否可以播放聲音
+    var MasterVolume=0;             //主音量
 
     this.Speed=new CANNON.Vec3();   //車輛速度
     this.SpeedLength=0;             //移動向量距離
@@ -189,6 +201,8 @@ function Car(iConfig)
     var EngineOverRunningDelayTime=0;   //引擎超轉時油門延遲
     var KeyUseN2O2=false;           //是否按下使用氮氣
     var UseN2O=false;               //是否使用氮氣
+    var LastUseN2O=false;
+    var UseN2OVolume=0;
 
     this.OnThrottleUp=false;        //是否踩油門
     var ThrottleUp=false;           //是否踩油門
@@ -262,7 +276,11 @@ function Car(iConfig)
     this.CameraCorrectionGroup.add(this.CameraRotateGruop);
     this.MeshGroup.add(this.CameraCorrectionGroup);
 
-    var CamreaDefaultRotation=0;        //鏡頭左右旋轉量
+    var CameraDefaultRotation=0;        //鏡頭左右旋轉量
+    var CameraShake=0;                  //鏡頭晃動量
+    var CameraShakeDelay=0;             //鏡頭晃動
+    var CameraShakeTarget=new THREE.Vector3();
+    var CameraShakeOffect=new THREE.Vector3();
     
     //建立鋼體
     this.Body=new CANNON.Body({
@@ -334,6 +352,271 @@ function Car(iConfig)
         this.WheelMashArray.push(WheelLOD);
         Config.Scene.add(WheelLOD);
     }
+
+    var WheelScream=false;
+    var ScreamSound=new THREE.PositionalAudio(MainListener);
+    ScreamSound.setBuffer(DefaultScreamSoundBuffer);
+    //ScreamSound.setLoop(true);
+    //ScreamSound.setMaxDistance(5);
+    ScreamSound.setRefDistance(0.4);
+    this.MeshGroup.add(ScreamSound);
+    //ScreamSound.setDistanceModel('linear');
+
+    this.EngineSoundArray=[];
+
+    //設定聲音
+    this.SetHaveSound=function(Setting){
+        HaveSound=Setting;
+    };
+
+    var LastSoundValue=0;
+    var ChangeGearVolumeDelay=0;       //換檔引擎聲音延遲
+    var ThrottleUpRateEffect=1,ThrottleUpEffectRateTarget=1;
+    var ThrottleUpVolumeEffect=1,ThrottleUpEffectVolumeTarget=1;
+    var BasNumber=1/(Config.SoundOptions.Samples.length-1);
+    var ScreamSoundVolume=0;
+    var ScreamSoundLastcurrentTime=0;
+    var WheelScreamDelay=0;
+
+    //更新音量
+    this.UpdateSound=function(Value){
+
+        if(InGarage)return;
+        if(SystemGameOver)return;
+        if(Config.Scene!=Scene)return;
+        if(this.NeedReset)return;
+
+        //if(Math.abs(this.MeshGroup.position.x)<20)
+        {
+            if(WheelScream && !ScreamSound.isPlaying)
+            {
+                ScreamSound.play();
+                ScreamSound.gain.gain.exponentialRampToValueAtTime(
+                    0.0001, 
+                    ScreamSound.context.currentTime + 0.001
+                );
+            }
+            
+
+            if(WheelScream)
+            {
+                WheelScreamDelay=5;
+            }
+            else
+            {
+                if(WheelScreamDelay>0)WheelScreamDelay--;
+            }
+            
+
+            if(WheelScreamDelay>0)
+            {
+                ScreamSoundVolume+=0.05; if(ScreamSoundVolume>0.99)ScreamSoundVolume=0.99;
+                ScreamSound.setPlaybackRate(
+                    Config.SoundOptions.ScreamPlaybackRate[0]
+                    +RandF(Config.SoundOptions.ScreamPlaybackRate[1])
+                );
+            }
+            else
+            {
+                ScreamSoundVolume-=0.1; if(ScreamSoundVolume<0)ScreamSoundVolume=0;
+            }
+
+            if(ScreamSound.context.currentTime-ScreamSoundLastcurrentTime>0.01)
+            {
+                ScreamSound.gain.gain.exponentialRampToValueAtTime(
+                    0.0001+ScreamSoundVolume*MasterVolume*0.5, 
+                    ScreamSound.context.currentTime + 0.01
+                );
+
+                ScreamSoundLastcurrentTime=ScreamSound.context.currentTime*1;
+            }
+        }
+
+        //if(Math.abs(this.MeshGroup.position.x)<20)
+        {
+            for(var i=0;i<this.EngineSoundArray.length;i++)
+                if(!this.EngineSoundArray[i].isPlaying)
+                {
+                    this.EngineSoundArray[i].play();
+                    this.EngineSoundArray[i].gain.gain.exponentialRampToValueAtTime(
+                        0.0001, 
+                        this.EngineSoundArray[i].context.currentTime + 0.001
+                    );
+                }
+
+            //踩油門時音量增加
+            if(ChangeGearVolumeDelay>0)
+            {
+                ChangeGearVolumeDelay--; if(UseN2O)ChangeGearVolumeDelay-=2;
+                ThrottleUpEffectRateTarget=0.85;
+                ThrottleUpEffectVolumeTarget=0.3;
+            }
+            //沒踩油門時降低音量
+            else if(!ThrottleUp)
+            {
+                ThrottleUpEffectRateTarget=0.7;
+                ThrottleUpEffectVolumeTarget=0.3;
+            }
+            else
+            {
+                ThrottleUpEffectRateTarget=1;
+                ThrottleUpEffectVolumeTarget=1;
+            }
+
+            //
+            ThrottleUpRateEffect=ThrottleUpRateEffect*0.9+ThrottleUpEffectRateTarget*0.1;
+            ThrottleUpVolumeEffect=ThrottleUpVolumeEffect*0.9+ThrottleUpEffectVolumeTarget*0.1;
+            
+
+            if(this.EngineSoundArray.length==1)
+            {
+                this.EngineSoundArray[0].setPlaybackRate((Config.SoundOptions.Samples[0][0]+Value*Config.SoundOptions.Samples[0][1])*ThrottleUpRateEffect);
+                //this.EngineSoundArray[0].setVolume(1*ThrottleUpVolumeEffect*MasterVolume);
+                this.EngineSoundArray[0].gain.gain.exponentialRampToValueAtTime(
+                    0.0001+1*ThrottleUpVolumeEffect*MasterVolume, 
+                    this.EngineSoundArray[0].context.currentTime + 0.001
+                );
+            }
+            else
+            {
+                for(var i=0;i<this.EngineSoundArray.length;i++)
+                {
+                    this.EngineSoundArray[i].setPlaybackRate((Config.SoundOptions.Samples[i][0]+Value*Config.SoundOptions.Samples[i][1])*ThrottleUpRateEffect);
+
+                    var Bas=BasNumber*i;
+
+                    if(Math.abs(Bas-Value)>BasNumber)
+                    {
+                        //this.EngineSoundArray[i].setVolume(0);
+                        this.EngineSoundArray[i].gain.gain.exponentialRampToValueAtTime(
+                            0.0001, 
+                            this.EngineSoundArray[i].context.currentTime + 0.001
+                        );
+                    }
+                    else
+                    {
+                        this.EngineSoundArray[i].gain.gain.exponentialRampToValueAtTime(
+                            0.0001+(1-Math.abs(Bas-Value)/BasNumber)*ThrottleUpVolumeEffect*MasterVolume, 
+                            this.EngineSoundArray[i].context.currentTime + 0.001
+                        );
+                        //this.EngineSoundArray[i].setVolume((1-Math.abs(Bas-Value)/BasNumber)*ThrottleUpVolumeEffect*MasterVolume);
+                    }
+                }
+            }
+        }
+    };
+
+    //停止聲音
+    this.StopAllSound=function(){
+
+        if(ScreamSound.isPlaying)
+        {
+            ScreamSound.stop();
+        }
+
+        for(var i=0;i<this.EngineSoundArray.length;i++)
+        {
+            if(this.EngineSoundArray[i].isPlaying)
+            {
+                this.EngineSoundArray[i].stop();
+            }
+        }
+    };
+
+    //開啟聲音
+    this.SoundUnDestroy=function(){
+
+        //如果是玩家車輛 則設定聲音迴圈，避免中斷感
+        if(MainFocusUnit==ThisCar)
+        {
+            ScreamSound.setLoop(true);
+
+            for(var i=0;i<this.EngineSoundArray.length;i++)
+            {
+                this.EngineSoundArray[i].setLoop(true);
+            }
+        }
+
+        SoundDestroyed=false;
+
+        if(!ScreamSound.isPlaying)
+        {
+            ScreamSound.startTime=0;
+            ScreamSound.play();
+        }
+
+        //if(!ScreamSound.isPlaying)
+        {
+            /*ScreamSound.context.currentTime=0;
+            ScreamSound.play();*/
+            
+
+            ScreamSound.gain.gain.exponentialRampToValueAtTime(
+                0.0001, 
+                ScreamSound.context.currentTime + 0.001
+            );
+        }
+
+        for(var i=0;i<this.EngineSoundArray.length;i++)
+        {
+            //if(!this.EngineSoundArray[i].isPlaying)
+            {
+                /*this.EngineSoundArray[i].context.currentTime=0;
+                this.EngineSoundArray[i].play();*/
+                
+
+                this.EngineSoundArray[i].gain.gain.exponentialRampToValueAtTime(
+                    0.0001, 
+                    this.EngineSoundArray[i].context.currentTime + 0.001
+                );
+            }
+        }
+        
+    };
+
+    //關閉聲音
+    var SoundDestroyed=false;
+    this.SoundDestroy=function(){
+
+        SoundDestroyed=true;
+
+        if(ScreamSound.isPlaying)
+        {
+            ScreamSound.stop();
+            //ScreamSound.context.currentTime=0;
+            //ScreamSound.pause();
+
+            ScreamSound.gain.gain.exponentialRampToValueAtTime(
+                0.0001, 
+                ScreamSound.context.currentTime + 0.001
+            );
+        }
+
+        for(var i=0;i<this.EngineSoundArray.length;i++)
+        {
+            if(this.EngineSoundArray[i].isPlaying)
+            {
+                this.EngineSoundArray[i].stop();
+                //this.EngineSoundArray[i].context.currentTime=0;
+                //this.EngineSoundArray[i].pause();
+
+                this.EngineSoundArray[i].gain.gain.exponentialRampToValueAtTime(
+                    0.0001, 
+                    this.EngineSoundArray[i].context.currentTime + 0.001
+                );
+            }
+        }
+    };
+
+    //製造鏡頭搖晃
+    this.MakeCameraShake=function(Value=5){
+
+        if(Value>CameraShake)
+        {
+            CameraShake=Value*1;
+            if(CameraShake>10)CameraShake=10;
+        }
+    };
     
     //Get UseN2O State
     this.GetUseN2O=function(){ return UseN2O; };
@@ -385,7 +668,8 @@ function Car(iConfig)
                 NextGearRemindTimer=0;
 
     		NowGear++;
-    		this.ChangeGear();
+            this.ChangeGear();
+            ChangeGearVolumeDelay=Config.SoundOptions.ChangeGearVolumeDelay;
     	}
     };
 
@@ -446,7 +730,7 @@ function Car(iConfig)
     var LastRPMValue=0,RPMValue=0,RPMMin=0.2,RPMMax=0.85;
     this.MathPRMDashArray=function(){
 
-        RPMValue=NowEngineSpeedPer*0.3+LastRPMValue*0.7;
+        RPMValue=NowEngineSpeedPer*0.2+LastRPMValue*0.8;
         LastRPMValue=RPMValue*1;
         this.RPMDashArrayData='0 '+(HUDRPMLength*(1-(RPMValue*(RPMMax-RPMMin)+RPMMin)))+' '+(HUDRPMLength*(RPMValue*(RPMMax-RPMMin)+RPMMin));
         this.RPMStrokeColor=(RPMValue>=this.BestGearPer)?'#ff0000':'#ffffff';
@@ -617,8 +901,8 @@ function Car(iConfig)
 
 			this.Show();
 			TargetLane.PutCar();
-			TargetLane.Run();
-
+            TargetLane.Run();
+            
             DebugMeedResetCarCount--;
             this.ResetCount++;
 		}
@@ -760,7 +1044,31 @@ function Car(iConfig)
     		{
     			this.Ready2Reset();
     		}
-    	}
+        }
+
+        //開啟或關閉聲音
+        if(HaveSound && !this.NeedReset && !SystemGameOver)
+        {
+            MasterVolume+=0.1; if(MasterVolume>1)MasterVolume=1;
+            if(MainFocusUnit==ThisCar)MasterVolume=0.5;
+        }
+        else 
+        {
+            MasterVolume-=0.2; if(MasterVolume<0)MasterVolume=0;
+        }
+
+        if((MasterVolume>0.1 || MainFocusUnit==ThisCar) && SoundDestroyed)
+        {
+            this.SoundUnDestroy();
+        }
+        else if(MasterVolume==0 && !SoundDestroyed)
+        {
+            this.SoundDestroy();
+        }
+
+        //更新音量
+        this.UpdateSound(LastSoundValue*0.9+NowEngineSpeedPer*0.1);
+        LastSoundValue=LastSoundValue*0.9+NowEngineSpeedPer*0.1;
 
     	if(this.NeedReset)
     		return ;
@@ -934,7 +1242,7 @@ function Car(iConfig)
         }
 
         //玩家加速
-		if(!this.IsAi && !SystemGameOver)
+		if(!this.IsAi && !InGarage && !SystemGameOver)
         {
             if(KeyBoardPressArray[38])
             {
@@ -1211,6 +1519,38 @@ function Car(iConfig)
         this.LastPosition.x+=SystemRelativePosition.x;
         this.UpdatePosition();
 
+        //播放氮氣聲音
+        if(!InGarage && MainFocusUnit==ThisCar && N2OSoundArray[0] && N2OSoundArray[1])
+        {
+            if(LastUseN2O!=UseN2O && UseN2O==true)
+            {
+                if(!N2OSoundArray[0].isPlaying)
+                    N2OSoundArray[0].play();
+            }
+
+            N2OSoundArray[0].position.copy(this.MeshGroup.position);
+            N2OSoundArray[1].position.copy(this.MeshGroup.position);
+
+            if(UseN2O)
+            {
+                if(!N2OSoundArray[1].isPlaying)
+                    N2OSoundArray[1].play();
+                
+                UseN2OVolume+=0.05;  if(UseN2OVolume>1)UseN2OVolume=1;
+            }
+            else
+            {
+                UseN2OVolume-=0.025;  if(UseN2OVolume<0)UseN2OVolume=0;
+
+                if(UseN2OVolume==0 && N2OSoundArray[1].isPlaying)
+                    N2OSoundArray[1].stop();
+            }
+
+            N2OSoundArray[1].setVolume(UseN2OVolume*0.1);
+
+            LastUseN2O=UseN2O;
+        }
+       
         
         //更新輪胎位置
     	for (var i = 0,j=this.Vehicle.wheelInfos.length; i < j; i++) {
@@ -1251,6 +1591,7 @@ function Car(iConfig)
 
             this.OnDrift=false;
             this.OnFly=true;
+            WheelScream=false;
             for (var i = 0,j=this.Vehicle.wheelInfos.length; i < j; i++)
             {
                 //是否打滑
@@ -1272,8 +1613,10 @@ function Car(iConfig)
                     //速度落差大於1 或踩煞車 則燒胎
                     if( (TakeBrakePer>0 && this.Speed.x<-0.05) || ((1-this.Vehicle.wheelInfos[i].skidInfo) * this.Vehicle.wheelInfos[i].UserDataSpeed > 1) )
                     {
+                        WheelScream=true;
                         Config.Wheel[i].TyreBurnoutTime++;
 
+                        if(MainFocusUnit==ThisCar)
                         if(Config.Wheel[i].TyreBurnoutTime>=TyreBurnoutTimeMax)
                         {
                             Config.Wheel[i].TyreBurnoutTime-=TyreBurnoutTimeMax;
@@ -1385,7 +1728,7 @@ function Car(iConfig)
                 this.Vehicle.wheelInfos[i].frictionSlip=FrictionSlipValue;
             }
         }
-        
+
 
 		Config.RunCallBack && Config.RunCallBack(ThisCar);
 
@@ -1422,6 +1765,25 @@ function Car(iConfig)
             LastKeyLookLeftState=KeyLookLeft;
             LastKeyLookRightState=KeyLookRight;
 
+            //計算鏡頭搖晃
+            if(CameraShakeDelay>0)CameraShakeDelay--;
+            if(CameraShakeDelay<=0 && CameraShake>0)
+            {
+                CameraShake--;
+                CameraShakeDelay=2;
+
+                var Length=CameraShake*0.25; if(Length>3)Length=3;
+                var Degree=RandF(360);
+                var XYLength=Math.cos(Degree*Math.PI/180)*Length;
+                CameraShakeTarget.z=Math.sin(Degree*Math.PI/180)*Length;
+                Degree=RandF(360);
+                CameraShakeTarget.x=Math.cos(Degree*Math.PI/180)*XYLength;
+                CameraShakeTarget.y=Math.sin(Degree*Math.PI/180)*XYLength;
+            }
+            CameraShakeOffect.x=CameraShakeOffect.x*0.9+0.1*CameraShakeTarget.x;
+            CameraShakeOffect.y=CameraShakeOffect.y*0.9+0.1*CameraShakeTarget.y;
+            CameraShakeOffect.z=CameraShakeOffect.z*0.9+0.1*CameraShakeTarget.z;
+
             //遊戲結束
             if(ViewType==2 || SystemGameOver)
             {
@@ -1439,6 +1801,10 @@ function Car(iConfig)
                     this.Camera.position.x=Config.CameraOptions.LookBack.Position.x;
                     this.Camera.position.y=Config.CameraOptions.LookBack.Position.y;
                     this.Camera.position.z=Config.CameraOptions.LookBack.Position.z;
+                    
+                    this.Camera.position.x+=CameraShakeOffect.x;
+                    this.Camera.position.y+=CameraShakeOffect.y;
+                    this.Camera.position.z+=CameraShakeOffect.z;
 
                     this.CameraRotateGruop.rotation.y=180*Math.PI/180;
                 }
@@ -1448,6 +1814,10 @@ function Car(iConfig)
                     this.Camera.position.x=Config.CameraOptions.LookRight.Position.x;
                     this.Camera.position.y=Config.CameraOptions.LookRight.Position.y;
                     this.Camera.position.z=Config.CameraOptions.LookRight.Position.z;
+                    
+                    this.Camera.position.x+=CameraShakeOffect.x;
+                    this.Camera.position.y+=CameraShakeOffect.y;
+                    this.Camera.position.z+=CameraShakeOffect.z;
 
                     this.CameraRotateGruop.rotation.y=-90*Math.PI/180;
                 }
@@ -1457,6 +1827,10 @@ function Car(iConfig)
                     this.Camera.position.x=Config.CameraOptions.LookLeft.Position.x;
                     this.Camera.position.y=Config.CameraOptions.LookLeft.Position.y;
                     this.Camera.position.z=Config.CameraOptions.LookLeft.Position.z;
+                    
+                    this.Camera.position.x+=CameraShakeOffect.x;
+                    this.Camera.position.y+=CameraShakeOffect.y;
+                    this.Camera.position.z+=CameraShakeOffect.z;
 
                     this.CameraRotateGruop.rotation.y=90*Math.PI/180;
                 }
@@ -1466,13 +1840,17 @@ function Car(iConfig)
                     var SpeedLength=this.SpeedLength;
                     if(SpeedLength>1)SpeedLength=1;
 
-                    CamreaDefaultRotation=(CamreaDefaultRotation*(1-Config.CameraOptions.Default.RotationEffect))+(this.MoveAngle*SpeedLength)*(Config.CameraOptions.Default.RotationEffect);
+                    CameraDefaultRotation=(CameraDefaultRotation*(1-Config.CameraOptions.Default.RotationEffect))+(this.MoveAngle*SpeedLength)*(Config.CameraOptions.Default.RotationEffect);
 
                     this.Camera.position.x=(this.Camera.position.x*Config.CameraOptions.Default.SpeedAdd.x) + (1-Config.CameraOptions.Default.SpeedAdd.x)*(Config.CameraOptions.Default.Position.x + (-this.Speed.y*Config.CameraOptions.Default.SpeedPer.x));
                     this.Camera.position.y=(this.Camera.position.y*Config.CameraOptions.Default.SpeedAdd.y) + (1-Config.CameraOptions.Default.SpeedAdd.y)*(Config.CameraOptions.Default.Position.y + (-this.Speed.z*Config.CameraOptions.Default.SpeedPer.y));
                     this.Camera.position.z=(this.Camera.position.z*Config.CameraOptions.Default.SpeedAdd.z) + (1-Config.CameraOptions.Default.SpeedAdd.z)*(Config.CameraOptions.Default.Position.z + (-this.Speed.x*Config.CameraOptions.Default.SpeedPer.z));
                     
-                    this.CameraRotateGruop.rotation.y=CamreaDefaultRotation*Math.PI/180;
+                    this.Camera.position.x+=CameraShakeOffect.x;
+                    this.Camera.position.y+=CameraShakeOffect.y;
+                    this.Camera.position.z+=CameraShakeOffect.z;
+
+                    this.CameraRotateGruop.rotation.y=CameraDefaultRotation*Math.PI/180;
                 }
             }
             //車內第一人稱視野
@@ -1510,7 +1888,7 @@ function Car(iConfig)
                 {
                     var SpeedLength=this.SpeedLength;
                     if(SpeedLength>1)SpeedLength=1;
-                    CamreaDefaultRotation=(CamreaDefaultRotation*(1-Config.CameraOptions.FOV.RotationEffect))+(this.MoveAngle*SpeedLength)*(Config.CameraOptions.FOV.RotationEffect);
+                    CameraDefaultRotation=(CameraDefaultRotation*(1-Config.CameraOptions.FOV.RotationEffect))+(this.MoveAngle*SpeedLength)*(Config.CameraOptions.FOV.RotationEffect);
 
                     //如果剛取消看左看右看後，則直接設定攝影機位置
                     if(FirstChangeLook)
@@ -1530,10 +1908,10 @@ function Car(iConfig)
                     this.Camera.position.y=(this.Camera.position.y*FOVSpeedAdd.y) + (1-FOVSpeedAdd.y)*(Config.CameraOptions.FOV.Position.y + (-this.Speed.z*Config.CameraOptions.FOV.SpeedPer.y));
                     this.Camera.position.z=(this.Camera.position.z*FOVSpeedAdd.z) + (1-FOVSpeedAdd.z)*(Config.CameraOptions.FOV.Position.z + (-this.Speed.x*Config.CameraOptions.FOV.SpeedPer.z));
                     
-                    this.CameraRotateGruop.rotation.y=CamreaDefaultRotation*Math.PI/180;
+                    this.CameraRotateGruop.rotation.y=CameraDefaultRotation*Math.PI/180;
                 }
             }
-		}
+        }
     };
 
     //變換視角
@@ -1739,7 +2117,7 @@ function Car(iConfig)
         //速度差
         SpeedValue += ((this.AiTargetSpeed * ((!this.AiAbide)?1:1.1)) - (-this.Speed.x*60*3.6)) * 0.01;
 
-        if(SpeedValue>0)
+        if(SpeedValue>0 && !this.AiHasCrack)
         {
             this.SpeedUp();
         }
@@ -1751,12 +2129,9 @@ function Car(iConfig)
         //碰撞預警煞車
         BrakeValue+=this.AiWillHitData.BrakeValue;
 
-        //Crack
-        BrakeValue += (this.AiHasCrack)?99999999:0;
-
-        if(BrakeValue>0)
+        if(BrakeValue>0 || this.AiHasCrack)
         {
-            this.TakeBrake(BrakeValue);
+            this.TakeBrake((this.AiHasCrack)?Config.BrakeForce:BrakeValue);
         }
         else
         {
@@ -1779,6 +2154,31 @@ function Car(iConfig)
             this.TurnRight(SteerValue);
         }
     };
+
+    this.Body.addEventListener("collide",function(e){
+
+        var relativeVelocity=e.contact.getImpactVelocityAlongNormal();
+
+        //鏡頭搖晃        
+        if(MainFocusUnit==ThisCar)
+        {
+            //找出最小質量
+            var MassMin=Math.min(e.contact.bi.mass,e.contact.bj.mass);
+            
+            //如果是撞擊不可動體則使用自己的質量
+            if(MassMin==0)
+            {
+                if(e.contact.bi==ThisCar.Body)
+                    MassMin=ThisCar.Body.mass;
+                else 
+                    MassMin=ThisCar.Body.mass;
+            }
+            ThisCar.MakeCameraShake(Math.floor(Math.abs(relativeVelocity)*MassMin*0.0005));
+        }
+
+        
+
+    });
 }
 
 //煞車痕

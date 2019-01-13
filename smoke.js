@@ -102,11 +102,11 @@ function Spark(iConfig)
         
 		for(i=0,l=ParticleCount;i<l;i++)
 		{
-            EachPointMoveVector[i].w-=GravityEffect*SystemStepPer;
+            EachPointMoveVector[i].w-=GravityEffect;
 
             Geometry.attributes.position.array[i*3+0]+=(EachPointMoveVector[i].x*SystemStepPer);
             Geometry.attributes.position.array[i*3+1]+=(EachPointMoveVector[i].y*SystemStepPer);
-            Geometry.attributes.position.array[i*3+2]+=(EachPointMoveVector[i].z*SystemStepPer)+EachPointMoveVector[i].w;
+            Geometry.attributes.position.array[i*3+2]+=(EachPointMoveVector[i].z*SystemStepPer)+EachPointMoveVector[i].w*SystemStepPer;
 
             if(Geometry.attributes.position.array[i*3+2]+this.Position.z<0)
             {
@@ -125,25 +125,25 @@ function Spark(iConfig)
                 EachPointMoveVector[i].y*=-1;
             }
 
-            EachPointMoveVector[i].x*=0.98;
-            EachPointMoveVector[i].y*=0.98;
-            EachPointMoveVector[i].z*=0.98;
+            EachPointMoveVector[i].x-=(EachPointMoveVector[i].x*0.02*SystemStepPer);
+            EachPointMoveVector[i].y-=(EachPointMoveVector[i].y*0.02*SystemStepPer);
+            EachPointMoveVector[i].z-=(EachPointMoveVector[i].z*0.02*SystemStepPer);
             
 		}
         Geometry.attributes.position.needsUpdate = true;
 
-        this.Position.x+=Config.MoveVector.x*SystemStepPer;
-        this.Position.y+=Config.MoveVector.y*SystemStepPer;
-        this.Position.z+=Config.MoveVector.z*SystemStepPer;
+        this.Position.x+=Config.MoveVector.x;
+        this.Position.y+=Config.MoveVector.y;
+        this.Position.z+=Config.MoveVector.z;
         
 
         this.ParticleSystem.position.x=this.Position.x/*+CamearRelativePosition.x*/;
         this.ParticleSystem.position.y=this.Position.y/*+CamearRelativePosition.x*/;
         this.ParticleSystem.position.z=this.Position.z/*+CamearRelativePosition.z*/;
 
-        Config.MoveVector.x*=0.98;
-        Config.MoveVector.y*=0.98;
-        Config.MoveVector.z*=0.98;
+        Config.MoveVector.x-=(Config.MoveVector.x*0.02*SystemStepPer);
+        Config.MoveVector.y-=(Config.MoveVector.y*0.02*SystemStepPer);
+        Config.MoveVector.z-=(Config.MoveVector.z*0.02*SystemStepPer);
         
     };
 }

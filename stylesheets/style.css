@@ -652,6 +652,35 @@ h5
     height: 100%;
 }
 
+#hud .wrong-orientation
+{
+    display: none;
+    position: absolute;
+    z-index: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 5px solid #FFF;
+    background: #F00;
+    top: 350px;
+    left: 50%;
+    margin-left: -25px;
+    opacity: 0.7;
+}
+#hud .wrong-orientation:after
+{
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 5px;
+    background: #FFF;
+    border-radius: 2.5px;
+    margin-top: -2.5px;
+    margin-left: -15px;
+}
 #hud .keyboard-remind
 {
     position: absolute;

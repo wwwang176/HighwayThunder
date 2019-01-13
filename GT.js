@@ -125,6 +125,14 @@ function GT(iConfig)
                 Position:new THREE.Vector3(1.25,0.5,-4.5)
             },
         },
+        SoundOptions:{
+            ChangeGearVolumeDelay:20,
+            ScreamPlaybackRate:[1.2,0.4],     //煞車聲設定
+            Samples:[
+                [1,1],
+                [0.8,0.3]
+            ]
+        },
         OnRunCallBack:function(){},
         RunCallBack:RunCallBack,
         TakeBreak:TakeBreak,
@@ -520,6 +528,20 @@ function GT(iConfig)
         this.BackBlueFireGroup.add(this.LeftBackBlueFireGroup);
         this.BackBlueFireGroup.add(this.RightBackBlueFireGroup);
     }
+
+    //設定聲音
+    for(var i=0;i<GTSoundBuffer.length;i++)
+    {
+        var Sound=new THREE.PositionalAudio(MainListener);
+        Sound.setBuffer(GTSoundBuffer[i]);
+        //Sound.setLoop(true);
+        //Sound.setMaxDistance(20);
+        Sound.setRefDistance(0.4);
+        //Sound.setDistanceModel('linear');
+        
+        this.EngineSoundArray.push(Sound);
+        this.MeshGroup.add(Sound);
+    }
     
 
     function TakeBreak(ThisCar)
@@ -724,9 +746,35 @@ function GT(iConfig)
         ShowBackFireTime=5;
     }
 
+	var HitPosition=new THREE.Vector3(0,0,0);
+    var HitMaterial=null;
 	this.Body.addEventListener("collide",function(e){
 
         var relativeVelocity=e.contact.getImpactVelocityAlongNormal();
+
+        if(MainFocusUnit==ThisCar)
+        {
+            if(e.contact.bi==ThisCar.Body)
+            {
+                HitPosition.set(
+                    e.contact.bi.position.x + e.contact.ri.x,
+                    e.contact.bi.position.y + e.contact.ri.y,
+                    e.contact.bi.position.z + e.contact.ri.z);
+                
+                HitMaterial=e.contact.bj.material;
+            }
+            else
+            {
+                HitPosition.set(
+                    e.contact.bj.position.x + e.contact.rj.x,
+                    e.contact.bj.position.y + e.contact.rj.y,
+                    e.contact.bj.position.z + e.contact.rj.z);
+                
+                HitMaterial=e.contact.bi.material;
+            }
+
+            PlayCrashSound(relativeVelocity,HitMaterial,HitPosition);
+        }
 
         if(Math.abs(relativeVelocity)>1)
         {

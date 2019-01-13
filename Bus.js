@@ -130,6 +130,14 @@ function Bus(iConfig)
                 Position:new THREE.Vector3(2,0,-10)
             },
         },
+        SoundOptions:{
+            ChangeGearVolumeDelay:30,
+            ScreamPlaybackRate:[0.8,0.4],     //煞車聲設定
+            Samples:[
+                [1,0.3],
+                [0.65,1.5]
+            ]
+        },
         OnRunCallBack:function(){},
         RunCallBack:RunCallBack,
         TakeBreak:TakeBreak,
@@ -175,7 +183,7 @@ function Bus(iConfig)
     this.prototype=Object.create(Car.prototype);
     Car.call(this,Config);
 
-    var ThisBus=this;
+    var ThisCar=this;
 
     this.BodySize=new CANNON.Vec3(12.5,2.5,10);
 
@@ -382,6 +390,20 @@ function Bus(iConfig)
         RightSpotLight.target=TargetObj;
     }
 
+    //設定聲音
+    for(var i=0;i<BusSoundBuffer.length;i++)
+    {
+        var Sound=new THREE.PositionalAudio(MainListener);
+        Sound.setBuffer(BusSoundBuffer[i]);
+        //Sound.setLoop(true);
+        //Sound.setMaxDistance(20);
+        Sound.setRefDistance(0.4);
+        //Sound.setDistanceModel('linear');
+        
+        this.EngineSoundArray.push(Sound);
+        this.MeshGroup.add(Sound);
+    }
+
     function TakeBreak(ThisCar)
     {
         BRLight.scale.set(5,5,5);
@@ -505,9 +527,35 @@ function Bus(iConfig)
         }
     }
 
+	var HitPosition=new THREE.Vector3(0,0,0);
+    var HitMaterial=null;
 	this.Body.addEventListener("collide",function(e){
         
         var relativeVelocity=e.contact.getImpactVelocityAlongNormal();
+
+        if(MainFocusUnit==ThisCar)
+        {
+            if(e.contact.bi==ThisCar.Body)
+            {
+                HitPosition.set(
+                    e.contact.bi.position.x + e.contact.ri.x,
+                    e.contact.bi.position.y + e.contact.ri.y,
+                    e.contact.bi.position.z + e.contact.ri.z);
+                
+                HitMaterial=e.contact.bj.material;
+            }
+            else
+            {
+                HitPosition.set(
+                    e.contact.bj.position.x + e.contact.rj.x,
+                    e.contact.bj.position.y + e.contact.rj.y,
+                    e.contact.bj.position.z + e.contact.rj.z);
+                
+                HitMaterial=e.contact.bi.material;
+            }
+
+            PlayCrashSound(relativeVelocity,HitMaterial,HitPosition);
+        }
 
         if(Math.abs(relativeVelocity)>1)
         {
@@ -537,14 +585,14 @@ function Bus(iConfig)
             }
         }
 
-        if(!ThisBus.AiHasCrack)
+        if(!ThisCar.AiHasCrack)
         {
             var TheyMass=0;
 
             if(Math.abs(relativeVelocity)>5)
             {
-                ThisBus.AiHasCrack=true;
-                ThisBus.AiHasCrackTime=0;
+                ThisCar.AiHasCrack=true;
+                ThisCar.AiHasCrackTime=0;
             }
                 
 

@@ -180,6 +180,14 @@ function TrailerTruck(iConfig)
                 Position:new THREE.Vector3(2,0.5,-8)
             },
         },
+        SoundOptions:{
+            ChangeGearVolumeDelay:30,
+            ScreamPlaybackRate:[0.65,0.4],     //煞車聲設定
+            Samples:[
+                [1,1],
+                //[1.5,0.5]
+            ]
+        },
         AiResetZOffset:0.75,
         AiTargetLaneYOffsetMax:0,
         Ready2ResetCallBack:Ready2ResetCallBack,
@@ -230,7 +238,7 @@ function TrailerTruck(iConfig)
     this.prototype=Object.create(Car.prototype);
     Car.call(this,Config);
 
-    var ThisTrailerTruck=this;
+    var ThisCar=this;
 
     this.BodySize=new CANNON.Vec3(7.2,2.5,10);
 
@@ -329,7 +337,7 @@ function TrailerTruck(iConfig)
                 this.ContainerConstraint = new CANNON.PointToPointConstraint(this.Body,new CANNON.Vec3(0,0,0.3),this.Container.Body,new CANNON.Vec3(-6,0,0));
                 world.addConstraint(this.ContainerConstraint);
             }*/
-            ThisTrailerTruck.ContainerConstraint.enable();
+            ThisCar.ContainerConstraint.enable();
         }
         else
         {
@@ -337,7 +345,7 @@ function TrailerTruck(iConfig)
             {
                 world.removeConstraint(this.ContainerConstraint);
             }*/
-            ThisTrailerTruck.ContainerConstraint.disable();
+            ThisCar.ContainerConstraint.disable();
         }
     }
     this.SetConstraint(false);
@@ -424,14 +432,28 @@ function TrailerTruck(iConfig)
         RightSpotLight.target=TargetObj;
     }
 
-    function Ready2ResetCallBack(ThisTrailerTruck)
+    //設定聲音
+    for(var i=0;i<TrailerTruckSoundBuffer.length;i++)
     {
-        if(ThisTrailerTruck.Container)
+        var Sound=new THREE.PositionalAudio(MainListener);
+        Sound.setBuffer(TrailerTruckSoundBuffer[i]);
+        //Sound.setLoop(true);
+        //Sound.setMaxDistance(20);
+        Sound.setRefDistance(0.4);
+        //Sound.setDistanceModel('linear');
+        
+        this.EngineSoundArray.push(Sound);
+        this.MeshGroup.add(Sound);
+    }
+
+    function Ready2ResetCallBack(ThisCar)
+    {
+        if(ThisCar.Container)
         {
             //斷開貨櫃
-            ThisTrailerTruck.SetConstraint(false);
-            if(!ThisTrailerTruck.Container.NeedReset)
-                ThisTrailerTruck.Container.Ready2Reset();
+            ThisCar.SetConstraint(false);
+            if(!ThisCar.Container.NeedReset)
+                ThisCar.Container.Ready2Reset();
         }
     }
 
@@ -448,33 +470,33 @@ function TrailerTruck(iConfig)
     ];
     var CarBodyMesh=CarModelGroup.getObjectByName('group_1');
 
-    function ResetCallBack(ThisTrailerTruck)
+    function ResetCallBack(ThisCar)
     {
         var NewColor=CarColor[Math.floor(Math.random()*CarColor.length)];
         CarBodyMesh.children[0].material.color=NewColor; 
         CarModelL1Group.children[0].material.color=NewColor; 
 
-        if(!ThisTrailerTruck.NeedReset && ThisTrailerTruck.Container)
+        if(!ThisCar.NeedReset && ThisCar.Container)
         {
             //console.log('truck reset callback');
-            //console.log(ThisTrailerTruck.Container.Body.position);
+            //console.log(ThisCar.Container.Body.position);
 
-            ThisTrailerTruck.Container.Reset();
-            ThisTrailerTruck.ResetContainerPosition();
+            ThisCar.Container.Reset();
+            ThisCar.ResetContainerPosition();
 
-            //console.log(ThisTrailerTruck.Body.position);
-            //console.log(ThisTrailerTruck.Container.Body.position);
+            //console.log(ThisCar.Body.position);
+            //console.log(ThisCar.Container.Body.position);
             
             //連接貨櫃
-            ThisTrailerTruck.SetConstraint(true);
+            ThisCar.SetConstraint(true);
         }
     }
 
-    function UserResetCallBack(ThisTrailerTruck)
+    function UserResetCallBack(ThisCar)
     {
-        ThisTrailerTruck.SetConstraint(false);
-        ThisTrailerTruck.ResetContainerPosition();
-        ThisTrailerTruck.SetConstraint(true);
+        ThisCar.SetConstraint(false);
+        ThisCar.ResetContainerPosition();
+        ThisCar.SetConstraint(true);
     }
 
     //重新將貨櫃安穩的放到身後
@@ -493,9 +515,9 @@ function TrailerTruck(iConfig)
         
     };
 
-    function ViewTypeChangeCallBack(ViewType,ThisTrailerTruck)
+    function ViewTypeChangeCallBack(ViewType,ThisCar)
     {
-        if(ViewType==1 && (MainFocusUnit==ThisTrailerTruck))
+        if(ViewType==1 && (MainFocusUnit==ThisCar))
         {
             CarFOVModelGroup.visible=true;
         }
@@ -506,9 +528,9 @@ function TrailerTruck(iConfig)
     }
 
     var NowSpeed=new THREE.Vector3();
-    function OnRunCallBack(ThisTrailerTruck)
+    function OnRunCallBack(ThisCar)
     {
-        NowSpeed=ThisTrailerTruck.Speed;
+        NowSpeed=ThisCar.Speed;
     }
 
     var LaneOffsetValue=0;
@@ -517,10 +539,10 @@ function TrailerTruck(iConfig)
     var SignalFlashTimeMax=10;
     var AiUseTurnLeftSignal=false; //使用右方向燈
     var AiUseTurnRighrSignal=false;//使用右方向燈
-    function RunCallBack(ThisTrailerTruck)
+    function RunCallBack(ThisCar)
     {
         //遠光燈
-        if(!ThisTrailerTruck.Stay && Config.HaveLight)
+        if(!ThisCar.Stay && Config.HaveLight)
         {
             if(CheckKeyBoardPress(UserKeyboardSetting.Bright))
             {
@@ -538,10 +560,10 @@ function TrailerTruck(iConfig)
             }
         }
 
-        if(ThisTrailerTruck.IsAi)
+        if(ThisCar.IsAi)
         {
             //車禍 雙閃
-            if(ThisTrailerTruck.AiHasCrack)
+            if(ThisCar.AiHasCrack)
             {
                 SignalFlashTime+=1*SystemStepPer;
                 if(SignalFlashTime>SignalFlashTimeMax)
@@ -562,9 +584,9 @@ function TrailerTruck(iConfig)
             //切換車道 單閃
             else
             {
-                if(ThisTrailerTruck.AiTargetLane!=null)
+                if(ThisCar.AiTargetLane!=null)
                 {
-                    LaneOffsetValue=(ThisTrailerTruck.AiTargetLane.Position.y - ThisTrailerTruck.Body.position.y + ThisTrailerTruck.AiTargetLaneYOffset) * ((ThisTrailerTruck.AiTargetLane.Reverse)?1:-1);
+                    LaneOffsetValue=(ThisCar.AiTargetLane.Position.y - ThisCar.Body.position.y + ThisCar.AiTargetLaneYOffset) * ((ThisCar.AiTargetLane.Reverse)?1:-1);
                     
                     if(Math.abs(LaneOffsetValue)>1)
                     {
@@ -597,14 +619,14 @@ function TrailerTruck(iConfig)
         }
     }
 
-    function TakeBreak(ThisTrailerTruck)
+    function TakeBreak(ThisCar)
     {
         ThisContainer.TakeBreak();
         /*BRLight.scale.set(5,5,5);
         BLLight.scale.set(5,5,5);*/
     }
 
-    function UnTakeBreak(ThisTrailerTruck)
+    function UnTakeBreak(ThisCar)
     {
         ThisContainer.UnTakeBreak();
         /*BRLight.scale.set(2,2,2);
@@ -612,9 +634,35 @@ function TrailerTruck(iConfig)
     }
 
 
+	var HitPosition=new THREE.Vector3(0,0,0);
+    var HitMaterial=null;
 	this.Body.addEventListener("collide",function(e){
 
         var relativeVelocity=e.contact.getImpactVelocityAlongNormal();
+
+        if(MainFocusUnit==ThisCar)
+        {
+            if(e.contact.bi==ThisCar.Body)
+            {
+                HitPosition.set(
+                    e.contact.bi.position.x + e.contact.ri.x,
+                    e.contact.bi.position.y + e.contact.ri.y,
+                    e.contact.bi.position.z + e.contact.ri.z);
+                
+                HitMaterial=e.contact.bj.material;
+            }
+            else
+            {
+                HitPosition.set(
+                    e.contact.bj.position.x + e.contact.rj.x,
+                    e.contact.bj.position.y + e.contact.rj.y,
+                    e.contact.bj.position.z + e.contact.rj.z);
+                
+                HitMaterial=e.contact.bi.material;
+            }
+
+            PlayCrashSound(relativeVelocity,HitMaterial,HitPosition);
+        }
 
         if(Math.abs(relativeVelocity)>1 && e.body!=ThisContainer.Body)
         {
@@ -644,17 +692,17 @@ function TrailerTruck(iConfig)
             }
         }
 
-        if(!ThisTrailerTruck.AiHasCrack)
+        if(!ThisCar.AiHasCrack)
         {
             var TheyMass=0;
 
             if(Math.abs(relativeVelocity)>5)
             {
-                ThisTrailerTruck.AiHasCrack=true;
-                ThisTrailerTruck.AiHasCrackTime=0;
+                ThisCar.AiHasCrack=true;
+                ThisCar.AiHasCrackTime=0;
 
                 //斷開貨櫃
-                //ThisTrailerTruck.ContainerConstraint.disable();
+                //ThisCar.ContainerConstraint.disable();
             }
                 
 
@@ -662,5 +710,33 @@ function TrailerTruck(iConfig)
         }
     });
 
+    ThisContainer.Body.addEventListener("collide",function(e){
+
+        var relativeVelocity=e.contact.getImpactVelocityAlongNormal();
+
+        if(MainFocusUnit==ThisCar)
+        {
+            if(e.contact.bi==ThisContainer.Body)
+            {
+                HitPosition.set(
+                    e.contact.bi.position.x + e.contact.ri.x,
+                    e.contact.bi.position.y + e.contact.ri.y,
+                    e.contact.bi.position.z + e.contact.ri.z);
+                
+                HitMaterial=e.contact.bj.material;
+            }
+            else
+            {
+                HitPosition.set(
+                    e.contact.bj.position.x + e.contact.rj.x,
+                    e.contact.bj.position.y + e.contact.rj.y,
+                    e.contact.bj.position.z + e.contact.rj.z);
+                
+                HitMaterial=e.contact.bi.material;
+            }
+
+            PlayCrashSound(relativeVelocity,HitMaterial,HitPosition);
+        }
+    });
     
 }
