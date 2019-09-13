@@ -729,8 +729,8 @@ function Car(iConfig)
     this.RPMDashArrayData='0 '+HUDRPMLength+' 0';
     var LastRPMValue=0,RPMValue=0,RPMMin=0.2,RPMMax=0.85;
     this.MathPRMDashArray=function(){
-
-        RPMValue=NowEngineSpeedPer*0.2+LastRPMValue*0.8;
+        var RPM = NowEngineSpeedPer * (ThrottleUp?1:0.7);
+        RPMValue=RPM*0.2+LastRPMValue*0.8;
         LastRPMValue=RPMValue*1;
         this.RPMDashArrayData='0 '+(HUDRPMLength*(1-(RPMValue*(RPMMax-RPMMin)+RPMMin)))+' '+(HUDRPMLength*(RPMValue*(RPMMax-RPMMin)+RPMMin));
         this.RPMStrokeColor=(RPMValue>=this.BestGearPer)?'#ff0000':'#ffffff';
@@ -889,6 +889,7 @@ function Car(iConfig)
             var Abide=RandF(1);
             this.AiAbide=(Abide<Config.AiAbidePer);
 
+            this.Stay=false;
             this.AiHitDelay=60;
             this.AiTargetLane=TargetLane;
             this.AiTargetLaneYOffset=RandF(Config.AiTargetLaneYOffsetMax)-Config.AiTargetLaneYOffsetMax*0.5;
@@ -1513,8 +1514,8 @@ function Car(iConfig)
 
     	this.Position.x=this.MeshGroup.position.x*1;
 		this.Position.y=this.MeshGroup.position.y*1;
-		this.Position.z=this.MeshGroup.position.z*1;
-
+        this.Position.z=this.MeshGroup.position.z*1;
+        
         //更新位置資訊
         this.LastPosition.x+=SystemRelativePosition.x;
         this.UpdatePosition();
@@ -1886,10 +1887,6 @@ function Car(iConfig)
                 //FOV
                 else
                 {
-                    var SpeedLength=this.SpeedLength;
-                    if(SpeedLength>1)SpeedLength=1;
-                    CameraDefaultRotation=(CameraDefaultRotation*(1-Config.CameraOptions.FOV.RotationEffect))+(this.MoveAngle*SpeedLength)*(Config.CameraOptions.FOV.RotationEffect);
-
                     //如果剛取消看左看右看後，則直接設定攝影機位置
                     if(FirstChangeLook)
                     {
@@ -1908,7 +1905,7 @@ function Car(iConfig)
                     this.Camera.position.y=(this.Camera.position.y*FOVSpeedAdd.y) + (1-FOVSpeedAdd.y)*(Config.CameraOptions.FOV.Position.y + (-this.Speed.z*Config.CameraOptions.FOV.SpeedPer.y));
                     this.Camera.position.z=(this.Camera.position.z*FOVSpeedAdd.z) + (1-FOVSpeedAdd.z)*(Config.CameraOptions.FOV.Position.z + (-this.Speed.x*Config.CameraOptions.FOV.SpeedPer.z));
                     
-                    this.CameraRotateGruop.rotation.y=CameraDefaultRotation*Math.PI/180;
+                    this.Camera.rotation.y=0*Math.PI/180;
                 }
             }
         }

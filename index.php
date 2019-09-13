@@ -89,7 +89,7 @@
         <div class="clearfix row speedunit-row">
             <div class="left">Abouts</div>
             <div class="right">
-                Creator: <a href="http://wwwamg.tw">WWWANG</a>
+                Creator: <a href="http://wwwang.tw">WWWANG</a>
             </div>
         </div>
         
@@ -1435,6 +1435,12 @@ function InitHighway()
     //audio
     MainListener=new THREE.AudioListener();
     MainListener.up=new THREE.Vector3(0,0,1);
+    // console.log(MainListener.context);
+    MainListener.gain.disconnect(MainListener.context.destination);
+    var compressor = MainListener.context.createDynamicsCompressor();
+    compressor.connect(MainListener.context.destination);
+    MainListener.gain.connect(compressor);
+    console.log(compressor);
     Scene.add(MainListener);
 
     var maxAnisotropy = Renderer.capabilities.getMaxAnisotropy();
@@ -2410,7 +2416,7 @@ function AnimateHighway()
 //限制聲音最多N個
 var ComposerDis;
 var ComposerNearObject=[];
-var SoundCountMax=5;        //聲音數量
+var SoundCountMax=999;        //聲音數量
 function HighwayComposer()
 {
     if(InGarage)return;
@@ -2797,46 +2803,22 @@ var InCountDown=true;
 function StopCountDown()
 {
     InCountDown=false;
-    $('.countdown').hide();
+    $('.countdown').removeClass('animate');
 }
 function StartCountDown(CallBack)
 {
     InCountDown=true;
 
     var CountDownObj=$('.countdown');
-    CountDownObj.show();
+    CountDownObj.addClass('animate');
 
-    CountDownEffect(CountDownObj.find('.text-1'),300,800);
-    
     setTimeout(function(){
-        CountDownEffect(CountDownObj.find('.text-2'),300,500);
-    },1100);
-    setTimeout(function(){
-        CountDownEffect(CountDownObj.find('.text-3'),300,500);
-    },1100+800);
-    setTimeout(function(){
-        CountDownEffect(CountDownObj.find('.text-4'),300,500);
-    },1100+800*2);
-    setTimeout(function(){
-        CountDownEffect(CountDownObj.find('.text-5'),300,500);
         if(InCountDown) CallBack && CallBack();
-    },1100+800*3);
-}
-function CountDownEffect(Obj,RunTime=300,WaitTime=800)
-{   
-    Obj.show().addClass('animate-1');
+    },500+600*3);
 
     setTimeout(function(){
-        Obj.removeClass('animate-1').addClass('animate-2');
-    },RunTime);
-    
-    setTimeout(function(){
-        Obj.removeClass('animate-2').addClass('animate-3');
-    },WaitTime+RunTime);
-
-    setTimeout(function(){
-        Obj.removeClass('animate-3');
-    },WaitTime+RunTime+RunTime);
+        $('.countdown').removeClass('animate');
+    },500+600*3 + 1000);
 }
 
 function GarageNextCar()

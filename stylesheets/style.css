@@ -159,6 +159,13 @@ h5
     color: #000;
 }
 
+@keyframes countdown
+{
+    0% { transform:translateX(-4%); opacity: 0; }
+    20% { transform:translateX(-2%); opacity: 1; }
+    100% { transform:translateX(5%); opacity: 0; }
+}
+
 .countdown
 {
     display: none;
@@ -173,35 +180,47 @@ h5
     text-align: center;
     pointer-events: none;
 }
+
 .countdown .text
+{
+    width: 100%;
+    transition: all .3s;
+}
+.countdown .number
 {
     opacity: 0;
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
     transform:translateX(-5%);
-    transition: all .3s;
-}
-.countdown .text.animate-1
-{
-    opacity: 1;
-    transform:translateX(-2%);
-}
-.countdown .text.animate-2
-{
-    opacity: 1;
-    transform:translateX(2%);
-    transition: all .8s linear;
-}
-.countdown .text.animate-3
-{
-    opacity: 0;
-    transform:translateX(5%);
-}
-.countdown .number
-{
     font-size: 50px;
+}
+
+.countdown .text-1
+{
+    opacity: 1;
+    position: relative;
+    top: -50px;
+}
+.countdown.animate
+{
+    display: block;
+}
+.countdown.animate .text-2
+{
+    animation: countdown 1s linear;
+}
+.countdown.animate .text-3
+{
+    animation: countdown 1s linear 0.7s;
+}
+.countdown.animate .text-4
+{
+    animation: countdown 1s linear 1.4s;
+}
+.countdown.animate .text-5
+{
+    animation: countdown 1s linear 2.1s;
 }
 
 #env-setting-button

@@ -472,6 +472,8 @@ function TrailerTruck(iConfig)
 
     function ResetCallBack(ThisCar)
     {
+        if(ThisCar.NeedReset)return;
+
         var NewColor=CarColor[Math.floor(Math.random()*CarColor.length)];
         CarBodyMesh.children[0].material.color=NewColor; 
         CarModelL1Group.children[0].material.color=NewColor; 
