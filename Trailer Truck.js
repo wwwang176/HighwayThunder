@@ -418,7 +418,7 @@ function TrailerTruck(iConfig)
         this.MeshGroup.add( LeftSpotLight );
 
         var TargetObj=new THREE.Object3D();
-        TargetObj.position.set(-5,-1,-0.55);
+        TargetObj.position.set(-5+MassOffset.x,-1+MassOffset.y,-0.55+MassOffset.z);
         this.MeshGroup.add( TargetObj );
         LeftSpotLight.target=TargetObj;
         
@@ -439,7 +439,7 @@ function TrailerTruck(iConfig)
         Sound.setBuffer(TrailerTruckSoundBuffer[i]);
         //Sound.setLoop(true);
         //Sound.setMaxDistance(20);
-        Sound.setRefDistance(0.4);
+        Sound.setRefDistance(0.7);
         //Sound.setDistanceModel('linear');
         
         this.EngineSoundArray.push(Sound);
@@ -680,9 +680,9 @@ function TrailerTruck(iConfig)
                             e.contact.bj.position.z + e.contact.rj.z
                         ),
                         MoveVector:new THREE.Vector3(
-                            NowSpeed.x,
-                            NowSpeed.y,
-                            NowSpeed.z
+                            NowSpeed.x/2,
+                            NowSpeed.y/2,
+                            NowSpeed.z/2
                         )
                     });
 

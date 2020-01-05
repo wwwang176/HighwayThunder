@@ -18,7 +18,7 @@
     "Fly":"飛ぶ",
     "Road Safety Camera":"オービス",
     "Total":"合計",
-    "Car accident":"交通事故",
+    "Car accident":"破壊",
     "Speed bonus":"スピードボーナス",
     "m":"m",
     "M":"m",

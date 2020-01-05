@@ -19,7 +19,7 @@
     "Fly":"飛行",
     "Road Safety Camera":"測速照相",
     "Total":"總分",
-    "Car accident":"車禍",
+    "Car accident":"破壞",
     "Speed bonus":"速度獎勵",
     "m":"公尺",
     "M":"公尺",

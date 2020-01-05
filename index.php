@@ -29,6 +29,7 @@
     <script src="car.js?<?php echo rand(0,9999);?>"></script>
     <script src="Package.js?<?php echo rand(0,9999);?>"></script>
     
+    <script src="suv.js?<?php echo rand(0,9999);?>"></script>
     <script src="WEX.js?<?php echo rand(0,9999);?>"></script>
     <script src="GT.js?<?php echo rand(0,9999);?>"></script>
     <script src="Sedan.js?<?php echo rand(0,9999);?>"></script>
@@ -268,6 +269,11 @@
                 <span class="count">999</span> <span class="i18n" data-text="m"></span><span class="i18n" data-text="ft"></span><br>
                 +<span class="score">999</span>
             </div>
+            <div class="item Accident">
+                <h5><span class="i18n" data-text="Car accident"></span></h5>
+                <span class="count">999</span> <span class="i18n" data-text="time"></span><br>
+                +<span class="score">999</span>
+            </div>
             
         </div>
         <div class="camera-score">
@@ -450,11 +456,12 @@ var SystemLaneClock=new THREE.Clock();
 var SystemResetClock=new THREE.Clock();
 var CollideClock=new THREE.Clock();
 var CollideClock2=new THREE.Clock();
-var SystemRunTime,SystemAiTime,SystemRenderTime,SystemWorldTime,SystemResetTime,SystemLaneTime,CollideTime,CollideTime;
+var SystemTime,SystemRunTime,SystemAiTime,SystemRenderTime,SystemWorldTime,SystemResetTime,SystemLaneTime,CollideTime,CollideTime;
 var LoadingManager = null;
 var LoadingDOM=$('#loading-div');
 var LoadingInfoDOM=$('#loading-div .info');
 var UpdateSystemObject=false;
+var UpdateSystemObjectTimeout;
 var GarageFocusUnit, GarageFocusUnitIndex;
 var GarageSpotLight, GarageSpotLightTargetObj;
 var GarageKeyNextPervDelay=0;
@@ -562,15 +569,21 @@ var PutTrafficCone3000State=false;      //放置交通錐的狀態
 var PutTrafficCone5000State=false;      //放置交通錐的狀態
 var ScoreCheckDOM=$('#score-check');
 
+var PoliceMode = false;                 //警察模式
+
 var SafetyCameraSoundBuffer=null;
 var SafetyCameraSound=null;
 var DefaultN2OSoundBuffer=[null,null];
 var N2OSoundArray=[];
 var DefaultScreamSoundBuffer=null;
 var DefaultCrashSoundBuffer=[null,null];
+var CrashSoundIndex=0;
 var CrashSoundArray=[];
 var TrafficConeSoundBuffer=[null];
+var TrafficConeSoundIndex=0;
 var TrafficConeSoundArray=[];
+var SUVModel=[null];
+var SUVSoundBuffer=[null,null,null];
 var WEXModel=[null,null,null];
 var WEXSoundBuffer=[null,null,null];
 var GTModel=[null,null,null];
@@ -633,6 +646,7 @@ $(window).resize(function()
 
 function WindowResize()
 {
+    var sizeScale=1;
     if(MainCamera)
     {
         MainCamera.aspect=window.innerWidth/window.innerHeight;
@@ -645,10 +659,16 @@ function WindowResize()
     }
     
     if(Renderer)
-        Renderer.setSize(window.innerWidth,window.innerHeight);
+    {
+        Renderer.setSize(window.innerWidth/sizeScale,window.innerHeight/sizeScale);
+        $(Renderer.domElement).css({width:'100%',height:'100%'});
+    }
     
     if(GarageRenderer)
-        GarageRenderer.setSize(window.innerWidth,window.innerHeight);
+    {
+        GarageRenderer.setSize(window.innerWidth/sizeScale,window.innerHeight/sizeScale);
+        $(GarageRenderer.domElement).css({width:'100%',height:'100%'});
+    }
 
 };
 
@@ -923,6 +943,12 @@ function LoadResource(CallBack)
 
     //讀取外部物件
     var loader = new THREE.ObjectLoader(LoadingManager);
+    loader.load("textures/suv/model.json",function (obj){ SUVModel[0]=obj; });
+    var loader = new THREE.ObjectLoader(LoadingManager);
+    loader.load("textures/suv/wheel.json",function (obj){ SUVModel[1]=obj; });
+    var loader = new THREE.ObjectLoader(LoadingManager);
+    loader.load("textures/suv/wheel-other.json",function (obj){ SUVModel[2]=obj; });
+    var loader = new THREE.ObjectLoader(LoadingManager);
     loader.load("textures/WEX/model.json",function (obj){ WEXModel[0]=obj; });
     var loader = new THREE.ObjectLoader(LoadingManager);
     loader.load("textures/WEX/wheel.json",function (obj){ WEXModel[1]=obj; });
@@ -1073,17 +1099,40 @@ function LoadResource(CallBack)
         }
     );
     var SoundLoader2 = new THREE.AudioLoader(LoadingManager).load(
-        'sound/WEX/load3.wav',
+        'sound/WEX/50_final.wav',
         function(audioBuffer)
         {
             WEXSoundBuffer[1]=audioBuffer;
         }
     );
     var SoundLoader3 = new THREE.AudioLoader(LoadingManager).load(
-        'sound/WEX/load2.wav',
+        'sound/WEX/100_final.wav',
         function(audioBuffer)
         {
             WEXSoundBuffer[2]=audioBuffer;
+        }
+    );
+
+    //SUV Sound
+    var SoundLoader1 = new THREE.AudioLoader(LoadingManager).load(
+        'sound/SUV/unload.wav',
+        function(audioBuffer)
+        {
+            SUVSoundBuffer[0]=audioBuffer;
+        }
+    );
+    var SoundLoader2 = new THREE.AudioLoader(LoadingManager).load(
+        'sound/SUV/50_final.wav',
+        function(audioBuffer)
+        {
+            SUVSoundBuffer[1]=audioBuffer;
+        }
+    );
+    var SoundLoader3 = new THREE.AudioLoader(LoadingManager).load(
+        'sound/SUV/100_final.wav',
+        function(audioBuffer)
+        {
+            SUVSoundBuffer[2]=audioBuffer;
         }
     );
 
@@ -1156,6 +1205,7 @@ function InitGarage()
     $(LoadingInfoDOM).find('.text').html('Cerate Garage');
 
     //歸零
+    PoliceMode=false;
     cancelAnimationFrame(RequestGarageAnimationFrameContorl);
     SystemGameOver=false;
     SystemStepPer=1;
@@ -1218,7 +1268,7 @@ function InitGarage()
             Braking:0.5,
             Maneuverability:0.62
         },
-        Position:new THREE.Vector3(3.75/2,-10,1)
+        Position:new THREE.Vector3(3.75/2,-13.5,1)
     });
     GarageAllCar.push(NewCar);
     if(InGarage)
@@ -1227,6 +1277,23 @@ function InitGarage()
         GarageFocusUnit=NewCar;
         GarageCarChange();
     }
+
+    var NewCar=new suv({
+        Ai:false,
+        CanReset:false,
+        Stay:true,
+        Scene:GarageScene,
+        World:GarageWorld,
+        HaveLight:true,
+        GarageScore:{
+            SpeedMax:0.7,
+            Acceleration:0.53,
+            Braking:0.4,
+            Maneuverability:0.73
+        },
+        Position:new THREE.Vector3(3.75/2,-10,1)
+    });
+    GarageAllCar.push(NewCar);
 
     var NewCar=new GT({
         Ai:false,
@@ -1316,6 +1383,7 @@ function InitHighway()
     $(LoadingInfoDOM).find('.text').html('Cerate Highway');
 
     //歸零
+    PoliceMode=false;
     AllCar=[];
     AllPackage=[];
     SystemGameOver=false;
@@ -1333,6 +1401,12 @@ function InitHighway()
     UserDriveMileageMax=0;      //玩家遊戲最高里程數
     UserMileagePer=0;           //里程數百分比
     UserTotalScore=0;           //玩家總分
+
+    //警察模式
+    if(GarageFocusUnit instanceof suv)
+    {
+        PoliceMode=true;
+    }
 
     $('#hud').show();
     $(ScoreCheckDOM).hide();
@@ -1435,12 +1509,10 @@ function InitHighway()
     //audio
     MainListener=new THREE.AudioListener();
     MainListener.up=new THREE.Vector3(0,0,1);
-    // console.log(MainListener.context);
     MainListener.gain.disconnect(MainListener.context.destination);
     var compressor = MainListener.context.createDynamicsCompressor();
     compressor.connect(MainListener.context.destination);
     MainListener.gain.connect(compressor);
-    console.log(compressor);
     Scene.add(MainListener);
 
     var maxAnisotropy = Renderer.capabilities.getMaxAnisotropy();
@@ -1472,34 +1544,41 @@ function InitHighway()
 
     //撞擊聲音
     CrashSoundArray=[];
-    for(var i=0;i<DefaultCrashSoundBuffer.length;i++)
+    for(var j=0;j<5;j++)
     {
-        var Sound=new THREE.PositionalAudio(MainListener);
-        Sound.setBuffer(DefaultCrashSoundBuffer[i]);
-        //Sound.setLoop(true);
-        //Sound.setMaxDistance(5);
-        Sound.setRefDistance(1);
-        CrashSoundArray.push({
-            Sound:Sound,
-            LastVolume:0
-        });
-        Scene.add(Sound);
+        for(var i=0;i<DefaultCrashSoundBuffer.length;i++)
+        {
+            var Sound=new THREE.PositionalAudio(MainListener);
+            Sound.setBuffer(DefaultCrashSoundBuffer[i]);
+            //Sound.setLoop(true);
+            // Sound.setMaxDistance(5);
+            Sound.setRefDistance(1);
+            Sound.position.set(CrashSoundArray.length*100,-999999,999999);
+            CrashSoundArray.push({
+                Sound:Sound,
+                LastVolume:0
+            });
+            // Scene.add(Sound);
+        }
     }
 
     //三角錐撞擊聲音
     TrafficConeSoundArray=[];
-    for(var i=0;i<TrafficConeSoundBuffer.length;i++)
+    for(var j=0;j<20;j++)
     {
-        var Sound=new THREE.PositionalAudio(MainListener);
-        Sound.setBuffer(TrafficConeSoundBuffer[i]);
-        //Sound.setLoop(true);
-        //Sound.setMaxDistance(5);
-        Sound.setRefDistance(1);
-        TrafficConeSoundArray.push({
-            Sound:Sound,
-            LastVolume:0
-        });
-        Scene.add(Sound);
+        for(var i=0;i<TrafficConeSoundBuffer.length;i++)
+        {
+            var Sound=new THREE.PositionalAudio(MainListener);
+            Sound.setBuffer(TrafficConeSoundBuffer[i]);
+            //Sound.setLoop(true);
+            //Sound.setMaxDistance(5);
+            Sound.setRefDistance(1);
+            TrafficConeSoundArray.push({
+                Sound:Sound,
+                LastVolume:0
+            });
+            // Scene.add(Sound);
+        }
     }
     
     console.log('start load');
@@ -1670,6 +1749,16 @@ function InitHighway()
             Position:new THREE.Vector3(0,3,2)
         });
     }
+    else if(GarageFocusUnit instanceof suv)
+    {
+        UserCar=new suv({
+            HaveLight:true,
+            HaveBackFire:true,
+            InitSpeed:1,
+            Stay:true,
+            Position:new THREE.Vector3(0,3,2)
+        });
+    }
     else if(GarageFocusUnit instanceof Sedan)
     {
         UserCar=new Sedan({
@@ -1714,7 +1803,8 @@ function InitHighway()
     
     if(UpdateSystemObject)
     {
-        setInterval(function()
+        clearInterval(UpdateSystemObjectTimeout);
+        UpdateSystemObjectTimeout=setInterval(function()
         {
             UpdateSystemObjectCount();
         },1000);
@@ -2096,24 +2186,30 @@ function AnimateHighway()
     MainFocusUnit.MeshGroup.updateMatrixWorld();
 
     var F=MainFocusUnit.Camera.getWorldPosition();
-    //var F=AllCar[0].Camera.getWorldPosition();
+    // var F=AllCar[3].Camera.getWorldPosition();
     MainCamera.position.x=F.x;
     MainCamera.position.y=F.y;
     MainCamera.position.z=F.z;
 
-    MainListener.position.x=MainFocusUnit.MeshGroup.position.x;
-    MainListener.position.y=MainFocusUnit.MeshGroup.position.y;
-    MainListener.position.z=MainFocusUnit.MeshGroup.position.z;
-
     var F=MainFocusUnit.Camera.getWorldQuaternion();
-    //var F=AllCar[0].Camera.getWorldQuaternion();
+    // var F=AllCar[3].Camera.getWorldQuaternion();
     MainCamera.quaternion.x=F.x;
     MainCamera.quaternion.y=F.y;
     MainCamera.quaternion.z=F.z;
     MainCamera.quaternion.w=F.w;
 
-    MainListener.quaternion.copy(MainFocusUnit.MeshGroup.quaternion);
-    MainListener.rotation.y=90*Math.PI/180; //(0,0,-1) to (-1,0,0)
+    var F=MainFocusUnit.ListenerCamera.getWorldPosition();
+    // var F=AllCar[3].ListenerCamera.getWorldPosition();
+    MainListener.position.x=F.x;
+    MainListener.position.y=F.y;
+    MainListener.position.z=F.z;
+
+    var F=MainFocusUnit.ListenerCamera.getWorldQuaternion();
+    // var F=AllCar[3].ListenerCamera.getWorldQuaternion();
+    MainListener.quaternion.x=F.x;
+    MainListener.quaternion.y=F.y;
+    MainListener.quaternion.z=F.z;
+    MainListener.quaternion.w=F.w;
 
     MainListener.updateMatrix();
     MainListener.updateMatrixWorld();
@@ -2138,7 +2234,7 @@ function AnimateHighway()
         if(MainFocusUnit!=null)
         {
             var DisplayUnit=MainFocusUnit;
-            //DisplayUnit=AllCar[0];
+            // DisplayUnit=AllCar[3];
 
             //速度
             HUDSpeedKmDiv.html(Math.round(DisplayUnit.Speed.x*-3.6*60 *((UserEnvironmentSetting.UnitofSpeed=='mph')?0.621371192237334:1) ));
@@ -2358,7 +2454,7 @@ function AnimateHighway()
                     if(Math.abs(MainFocusUnit.Speed.x)*60*3.6>=120)
                     {
                         UserSafetyCameraScore[i].Add(1000*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer);
-                        UserTotalScore+=900*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer;
+                        UserTotalScore+=1000*Math.abs(MainFocusUnit.Speed.x)*UserSpeedBonusPer;
                         
                         SafetyCameraFlashDOMShow=true;
                         SafetyCameraFlashDOM.show();
@@ -2381,6 +2477,7 @@ function AnimateHighway()
         for(var i=0;i<UserSafetyCameraScore.length;i++)
             UserSafetyCameraScore[i].Run();
         UserFlyScore.Run();
+        UserCrackScore.Run();
 
         //總分
         UserTotalScoreDOM.html(Math.floor(UserTotalScore));
@@ -2451,22 +2548,28 @@ function HighwayComposer()
 }
 
 //播放撞擊聲
+var Njo,VolumePer,Volume;
 function PlayCrashSound(relativeVelocity=0,ContactMaterial,HitPosition)
 {
     if(InGarage)return;
     if(SystemGameOver)return;
-    if(relativeVelocity<=0)return;
-    if(relativeVelocity<0.02)return;
+    if(Math.abs(relativeVelocity)<1)return;
 
     switch(ContactMaterial)
     {
         //撞擊三角錐
         case TrafficConeMaterial: 
 
-            var Njo=Rand(TrafficConeSoundArray.length);
+            // var Njo=Rand(TrafficConeSoundArray.length);
+            Njo=TrafficConeSoundIndex*1;
+
+            TrafficConeSoundIndex++;
+            if(TrafficConeSoundIndex>=TrafficConeSoundArray.length)
+            TrafficConeSoundIndex=0;
+
             if(TrafficConeSoundArray[Njo])
             {
-                var VolumePer=SoundDistanceEffect(HitPosition,2,1);
+                VolumePer=SoundDistanceEffect(HitPosition,2,1);
 
                 if(TrafficConeSoundArray[Njo].Sound.isPlaying && VolumePer>=TrafficConeSoundArray[Njo].LastVolume)
                 {
@@ -2479,25 +2582,37 @@ function PlayCrashSound(relativeVelocity=0,ContactMaterial,HitPosition)
 
                 TrafficConeSoundArray[Njo].Sound.position.set(HitPosition.x,HitPosition.y,HitPosition.z);
 
-                var Volume=1*(Math.abs(relativeVelocity)*0.05); if(Volume>1)Volume=1;
+                Volume=1*(Math.abs(relativeVelocity)*0.05); if(Volume>1)Volume=1;
 
                 TrafficConeSoundArray[Njo].Sound.setPlaybackRate(0.75+RandF(0.4));
+
+                // TrafficConeSoundArray[Njo].Sound.gain.gain.setValueAtTime(
+                //     1, 
+                //     TrafficConeSoundArray[Njo].Sound.context.currentTime
+                // );
                 TrafficConeSoundArray[Njo].Sound.gain.gain.exponentialRampToValueAtTime(
                     Volume, 
-                    TrafficConeSoundArray[Njo].Sound.context.currentTime + 0.01
+                    TrafficConeSoundArray[Njo].Sound.context.currentTime + 0.02
                 );
             }
             break;
         
         //預設撞擊
         default:
-            var Njo=Rand(CrashSoundArray.length);
+            // var Njo=Rand(CrashSoundArray.length);
+            Njo=CrashSoundIndex*1;
+
+            CrashSoundIndex++;
+            if(CrashSoundIndex>=CrashSoundArray.length)
+            CrashSoundIndex=0;
+
             if(CrashSoundArray[Njo])
             {
-                var VolumePer=SoundDistanceEffect(HitPosition,2,1);
+                VolumePer=SoundDistanceEffect(HitPosition,2,1);
 
                 if(CrashSoundArray[Njo].Sound.isPlaying && VolumePer>=CrashSoundArray[Njo].LastVolume)
                 {
+                    console.log('over');
                     CrashSoundArray[Njo].Sound.stop();
                     CrashSoundArray[Njo].LastVolume=VolumePer*1;
                 }
@@ -2507,12 +2622,12 @@ function PlayCrashSound(relativeVelocity=0,ContactMaterial,HitPosition)
 
                 CrashSoundArray[Njo].Sound.position.set(HitPosition.x,HitPosition.y,HitPosition.z);
 
-                var Volume=1*(Math.abs(relativeVelocity)*0.05); if(Volume>1)Volume=1;
+                Volume=1*(Math.abs(relativeVelocity)*0.05); if(Volume>1)Volume=1;
 
                 CrashSoundArray[Njo].Sound.setPlaybackRate(0.75+RandF(0.4));
                 CrashSoundArray[Njo].Sound.gain.gain.exponentialRampToValueAtTime(
                     Volume, 
-                    CrashSoundArray[Njo].Sound.context.currentTime + 0.01
+                    CrashSoundArray[Njo].Sound.context.currentTime + 0.02
                 );
             }
     }
@@ -2544,6 +2659,17 @@ function GameOverReMathScore()
     
     $(ScoreCheckDOM).find('.score-type .CloseDrive .count').html(UserCloseDriveScore.Count);
     $(ScoreCheckDOM).find('.score-type .CloseDrive .score').html(Math.floor(UserCloseDriveScore.TotalScore).numberFormat(0));
+    
+    if(PoliceMode)
+    {
+        $(ScoreCheckDOM).find('.score-type .Accident').show();
+        $(ScoreCheckDOM).find('.score-type .Accident .count').html(UserCrackScore.Count);
+        $(ScoreCheckDOM).find('.score-type .Accident .score').html(Math.floor(UserCrackScore.TotalScore).numberFormat(0));
+    }
+    else
+    {
+        $(ScoreCheckDOM).find('.score-type .Accident').hide();
+    }
     
     $(ScoreCheckDOM).find('.score-type .Drift .count').html(Math.round(UserDriftScore.Count*((UserEnvironmentSetting.UnitofSpeed=='mph')?3.2808:1)*10)/10);
     $(ScoreCheckDOM).find('.score-type .Drift .score').html(Math.floor(UserDriftScore.TotalScore).numberFormat(0));
@@ -2654,6 +2780,7 @@ function UpdateSystemObjectCount()
 {
 
     var Str='';
+    Str+= 'Render triangles: '+Renderer.info.render.triangles+'<br>';
     Str+= 'SystemRenderTime: '+SystemRenderTime+'<br>';
     Str+= 'SystemRunTime: '+SystemRunTime+'<br>';
     Str+= 'SystemAiTime: '+SystemAiTime+'<br>';

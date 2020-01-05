@@ -397,7 +397,7 @@ function Bus(iConfig)
         Sound.setBuffer(BusSoundBuffer[i]);
         //Sound.setLoop(true);
         //Sound.setMaxDistance(20);
-        Sound.setRefDistance(0.4);
+        Sound.setRefDistance(0.7);
         //Sound.setDistanceModel('linear');
         
         this.EngineSoundArray.push(Sound);
@@ -571,9 +571,9 @@ function Bus(iConfig)
                             e.contact.bj.position.z + e.contact.rj.z
                         ),
                         MoveVector:new THREE.Vector3(
-                            NowSpeed.x,
-                            NowSpeed.y,
-                            NowSpeed.z
+                            NowSpeed.x/2,
+                            NowSpeed.y/2,
+                            NowSpeed.z/2
                         )
                     });
 

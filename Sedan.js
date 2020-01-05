@@ -82,7 +82,7 @@ function Sedan(iConfig)
                 [0.8,0.5]
             ]
         },
-        OnRunCallBack:function(){},
+        OnRunCallBack:OnRunCallBack,
         RunCallBack:RunCallBack,
         TakeBreak:TakeBreak,
         UnTakeBreak:UnTakeBreak,
@@ -96,6 +96,9 @@ function Sedan(iConfig)
     Car.call(this,Config);
 
     var ThisCar=this;
+
+    this.Illegal = false;       //是否是非法車輛
+    this.AiPoliceBehaviorTimer=0;   //對警察反應的時間
 
     this.BodySize=new CANNON.Vec3(4,1.5,10);
 
@@ -388,7 +391,7 @@ function Sedan(iConfig)
         Sound.setBuffer(SedanSoundBuffer[i]);
         //Sound.setLoop(true);
         //Sound.setMaxDistance(20);
-        Sound.setRefDistance(0.4);
+        Sound.setRefDistance(0.7);
         //Sound.setDistanceModel('linear');
         
         this.EngineSoundArray.push(Sound);
@@ -435,6 +438,27 @@ function Sedan(iConfig)
         CarL1BodyMesh.children[2].material.color=NewColor;  //車頂
         CarModelL2Group.children[0].material.color=NewColor;  //車頂
         
+        if(PoliceMode){
+            ThisCar.Illegal=RandF(1)<0.5;
+        }
+    }
+
+    //警察模式的頭頂提示
+    if(PoliceMode)
+    {
+        var geometry = new THREE.CylinderBufferGeometry(0.3,0,0.8,3);
+        var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+        this.IllegalMark = new THREE.Mesh( geometry, material );
+        this.IllegalMark.position.set(0,0,3);
+        this.IllegalMark.rotateX(Math.PI/2);
+        this.MeshGroup.add(this.IllegalMark);
+    }
+
+    function OnRunCallBack(ThisCar)
+    {
+        if(PoliceMode && ThisCar.IsAi && ThisCar.IllegalMark!=undefined){
+            ThisCar.IllegalMark.visible = (ThisCar.Illegal==true && ThisCar.AiHasCrack==false);
+        }
     }
 
     var LaneOffsetValue=0;
@@ -446,6 +470,25 @@ function Sedan(iConfig)
     var NowSpeed=new THREE.Vector3();
     function RunCallBack(ThisCar)
     {
+
+        //閃躲警察
+        if(PoliceMode && ThisCar.IsAi && ThisCar.Illegal)
+        {
+            ThisCar.AiPoliceBehaviorTimer--;
+
+            if(
+                ThisCar.AiPoliceBehaviorTimer<=0 && 
+                Math.abs(MainFocusUnit.Body.position.y-ThisCar.Body.position.y)<3.5 &&
+                Math.abs(ThisCar.Body.position.x)<50
+            )
+            {
+                ThisCar.AiChangeLaneTime=ThisCar.AiChangeLaneTimeMax*1;
+                ThisCar.ChangeLane();
+                ThisCar.AiPoliceBehaviorTimer = 0.5*60;
+            }
+        }
+        
+
         if(Config.HaveBackFire)
         {
             if(ThisCar.OnBackFireVisible)
@@ -517,34 +560,41 @@ function Sedan(iConfig)
             //切換車道 單閃
             else
             {
-                if(ThisCar.AiTargetLane!=null)
+                if(PoliceMode && ThisCar.IsAi && ThisCar.Illegal)
                 {
-                    LaneOffsetValue=(ThisCar.AiTargetLane.Position.y - ThisCar.Body.position.y + ThisCar.AiTargetLaneYOffset) * ((ThisCar.AiTargetLane.Reverse)?1:-1);
+
+                }
+                else
+                {
+                    if(ThisCar.AiTargetLane!=null)
+                    {
+                        LaneOffsetValue=(ThisCar.AiTargetLane.Position.y - ThisCar.Body.position.y + ThisCar.AiTargetLaneYOffset) * ((ThisCar.AiTargetLane.Reverse)?1:-1);
+                        
+                        if(Math.abs(LaneOffsetValue)>1)
+                        {
+                            if(LaneOffsetValue>0)AiUseTurnLeftSignal=true;
+                            else if(LaneOffsetValue<0)AiUseTurnRighrSignal=true;
+                        }
+                        else
+                        {
+                            AiUseTurnLeftSignal=false;
+                            AiUseTurnRighrSignal=false;
+                        }
+                    }
+    
+                    SignalFlashTime+=1*SystemStepPer;
+                    if(SignalFlashTime>SignalFlashTimeMax)
+                    {
+                        SignalFlashTime=0;
+                        SignalFlash=!SignalFlash;
+                    }
+    
+                    BLSignalLight.visible=(AiUseTurnLeftSignal && SignalFlash);
+                    FLSignalLight.visible=(AiUseTurnLeftSignal && SignalFlash);
                     
-                    if(Math.abs(LaneOffsetValue)>1)
-                    {
-                        if(LaneOffsetValue>0)AiUseTurnLeftSignal=true;
-                        else if(LaneOffsetValue<0)AiUseTurnRighrSignal=true;
-                    }
-                    else
-                    {
-                        AiUseTurnLeftSignal=false;
-                        AiUseTurnRighrSignal=false;
-                    }
+                    BRSignalLight.visible=(AiUseTurnRighrSignal && SignalFlash);
+                    FRSignalLight.visible=(AiUseTurnRighrSignal && SignalFlash);
                 }
-
-                SignalFlashTime+=1*SystemStepPer;
-                if(SignalFlashTime>SignalFlashTimeMax)
-                {
-                    SignalFlashTime=0;
-                    SignalFlash=!SignalFlash;
-                }
-
-                BLSignalLight.visible=(AiUseTurnLeftSignal && SignalFlash);
-                FLSignalLight.visible=(AiUseTurnLeftSignal && SignalFlash);
-                
-                BRSignalLight.visible=(AiUseTurnRighrSignal && SignalFlash);
-                FRSignalLight.visible=(AiUseTurnRighrSignal && SignalFlash);
             }
         }
         
@@ -557,7 +607,7 @@ function Sedan(iConfig)
     var HitMaterial=null;
 	this.Body.addEventListener("collide",function(e){
 
-        var relativeVelocity=e.contact.getImpactVelocityAlongNormal();
+        var relativeVelocity=Math.abs(e.contact.getImpactVelocityAlongNormal());
 
         if(MainFocusUnit==ThisCar)
         {
@@ -583,23 +633,23 @@ function Sedan(iConfig)
             PlayCrashSound(relativeVelocity,HitMaterial,HitPosition);
         }
 
-        if(Math.abs(relativeVelocity)>1)
+        if(relativeVelocity>1)
         {
             for(var i=0;i<SparkArray.length;i++)
             {
                 if(!SparkArray[i].Alive)
                 {
                     SparkArray[i].ReUse({
-                        AliveTime:10+Rand(20)+Math.abs(relativeVelocity)*2,
+                        AliveTime:10+Rand(20)+relativeVelocity*2,
                         Position:new THREE.Vector3(
                             e.contact.bj.position.x + e.contact.rj.x,
                             e.contact.bj.position.y + e.contact.rj.y,
                             e.contact.bj.position.z + e.contact.rj.z
                         ),
                         MoveVector:new THREE.Vector3(
-                            NowSpeed.x,
-                            NowSpeed.y,
-                            NowSpeed.z
+                            NowSpeed.x/2,
+                            NowSpeed.y/2,
+                            NowSpeed.z/2
                         )
                     });
 
@@ -615,31 +665,24 @@ function Sedan(iConfig)
         if(!ThisCar.AiHasCrack)
         {
             var TheyMass=0;
-            if(Math.abs(relativeVelocity)>5)
+            if(relativeVelocity>5)
             {
                 ThisCar.AiHasCrack=true;
                 ThisCar.AiHasCrackTime=0;
+
+                //判定碰撞雙方是否包含玩家
+                if(e.contact.bi==MainFocusUnit.Body || e.contact.bj==MainFocusUnit.Body)
+                {
+                    if(PoliceMode && ThisCar.Illegal)
+                    {
+                        UserCrackScore.Add(15*relativeVelocity*UserSpeedBonusPer);
+                        UserCrackScore.Count++;
+                        UserTotalScore+=15*relativeVelocity*UserSpeedBonusPer;
+    
+                        MainFocusUnit.AddN2O2(relativeVelocity*UserSpeedBonusPer*0.5);
+                    }
+                }
             }
-            
-        
-
-            //console.log(relativeVelocity);
-
-
-            /*if(relativeVelocity>2)
-            {
-                TheyMass=Math.min(e.contact.bj.mass,e.contact.bi.mass);
-
-                //撞擊海面
-                if(e.contact.bj.id==GroundBody.id)
-                {
-                    TheyMass=e.contact.bi.mass;
-                }
-                else if(e.contact.bi.id==GroundBody.id)
-                {
-                    TheyMass=e.contact.bj.mass;
-                }
-            } */
         }
     });
 

@@ -19,7 +19,7 @@
     "Fly":"Fly",
     "Road Safety Camera":"Safety Camera",
     "Total":"Total",
-    "Car accident":"Car accident",
+    "Car accident":"Destroy",
     "Speed bonus":"Speed bonus",
     "m":"m",
     "M":"M",

@@ -112,6 +112,7 @@ function Car(iConfig)
         Ai:false,
         AiTargetSpeed:0,
         AiAbidePer:0.5,                    //守法機率
+        AiAbideSpeedPer:1.1,                    //違法的加速比例
         CanReset:false,					//是否會清除
         AiResetZOffset:0,               //重製時Z軸高度
         AiTargetLaneYOffsetMax:2,          //習慣偏移最大量
@@ -181,12 +182,17 @@ function Car(iConfig)
     this.NeedReset=Config.CanReset; //是否需要回到重置池
     this.IsAi=Config.Ai;            //是否是AI
     this.AiAbide=true;              //是否守法
+    this.AiAbidePer=Config.AiAbidePer;              //守法機率
+    this.AiAbideSpeedPer=Config.AiAbideSpeedPer;    //是否守法
     var KeyUserOnReset=false;       //玩家按下重置
     this.UserOnReset=false;         //玩家要求重置中
     this.UserOnResetTime=0;         //玩家要求重置延遲
     this.Stay=Config.Stay;          //是否不能動
     var HaveSound=Config.HaveSound; //是否可以播放聲音
     var MasterVolume=0;             //主音量
+    var EngineOverRunShakeDelay=0;  //超轉顫抖
+    var LastEngineOverRunShakeValue=0;//超轉顫抖
+    this.EngineOverRunShake = false;//超轉引擎顫抖
 
     this.Speed=new CANNON.Vec3();   //車輛速度
     this.SpeedLength=0;             //移動向量距離
@@ -196,6 +202,7 @@ function Car(iConfig)
     this.BestGearPer=0;             //最佳升檔轉速百分比
     this.BestPervGearPer=0;         //最佳降檔轉速百分比
     var NowEngineSpeedPer=0;		//目前引擎轉速百分比
+    var DisplayEngineSpeedPer=0;	//引擎轉速百分比(顯示用)
     var NowClutchPer=0;             //目前離合器百分比
     this.EngineOverRunning=false;   //引擎是否超轉中
     var EngineOverRunningDelayTime=0;   //引擎超轉時油門延遲
@@ -209,6 +216,8 @@ function Car(iConfig)
     var LastThrottleState=false;    //上次油門狀態
     this.OnTakeBrake=false;         //是否踩煞車
     var TakeBrakePer=0;             //煞車量
+    var HeelandToeTimer=0;          //降檔跟趾
+    var HeelandToe=false;           //是否正在降檔跟趾
 
     var TargetSteerVal=0;           //目標輪胎轉向
     var NowSteerVal=0;              //目前輪胎轉向
@@ -261,6 +270,10 @@ function Car(iConfig)
     this.MeshGroup.add(this.BackFireGroup);
     this.MeshGroup.add(this.BackBlueFireGroup);
 
+    this.ListenerCamera =  new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.5,500);
+    this.ListenerCamera.up=new THREE.Vector3(0,0,1);
+    this.ListenerCamera.position.set(0,0,1);
+
     this.Camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.5,500);
     this.Camera.up=new THREE.Vector3(0,0,1);
     this.Camera.position.set(0,2,6);
@@ -273,6 +286,7 @@ function Car(iConfig)
 
     this.CameraRotateGruop=new THREE.Group();
     this.CameraRotateGruop.add(this.Camera);
+    this.CameraRotateGruop.add(this.ListenerCamera);
     this.CameraCorrectionGroup.add(this.CameraRotateGruop);
     this.MeshGroup.add(this.CameraCorrectionGroup);
 
@@ -281,6 +295,8 @@ function Car(iConfig)
     var CameraShakeDelay=0;             //鏡頭晃動
     var CameraShakeTarget=new THREE.Vector3();
     var CameraShakeOffect=new THREE.Vector3();
+    var CameraShakeRotate=0;
+    var CameraShakeRotateTarget=0;
     
     //建立鋼體
     this.Body=new CANNON.Body({
@@ -292,6 +308,10 @@ function Car(iConfig)
     this.Body.position.x=Config.Position.x;
     this.Body.position.y=Config.Position.y;
     this.Body.position.z=Config.Position.z;
+
+    this.Body.getCar = function(){
+        return ThisCar;
+    };
 
     // Create the vehicle
     this.Vehicle=new CANNON.RaycastVehicle({
@@ -358,7 +378,7 @@ function Car(iConfig)
     ScreamSound.setBuffer(DefaultScreamSoundBuffer);
     //ScreamSound.setLoop(true);
     //ScreamSound.setMaxDistance(5);
-    ScreamSound.setRefDistance(0.4);
+    ScreamSound.setRefDistance(0.7);
     this.MeshGroup.add(ScreamSound);
     //ScreamSound.setDistanceModel('linear');
 
@@ -386,6 +406,13 @@ function Car(iConfig)
         if(Config.Scene!=Scene)return;
         if(this.NeedReset)return;
 
+        //超轉引擎顫抖
+        if(this.EngineOverRunShake)
+        {
+            Value*=0.8;
+        }
+
+        //輪胎打滑聲
         //if(Math.abs(this.MeshGroup.position.x)<20)
         {
             if(WheelScream && !ScreamSound.isPlaying)
@@ -432,20 +459,28 @@ function Car(iConfig)
             }
         }
 
+        //引擎聲
         //if(Math.abs(this.MeshGroup.position.x)<20)
         {
             for(var i=0;i<this.EngineSoundArray.length;i++)
                 if(!this.EngineSoundArray[i].isPlaying)
                 {
                     this.EngineSoundArray[i].play();
+                    // this.EngineSoundArray[i].setLoop(true);
                     this.EngineSoundArray[i].gain.gain.exponentialRampToValueAtTime(
                         0.0001, 
                         this.EngineSoundArray[i].context.currentTime + 0.001
                     );
                 }
 
-            //踩油門時音量增加
-            if(ChangeGearVolumeDelay>0)
+            //跟趾
+            if(HeelandToe)
+            {
+                ThrottleUpEffectRateTarget=1;
+                ThrottleUpEffectVolumeTarget=1;
+            }
+            //換檔延遲
+            else if(ChangeGearVolumeDelay>0)
             {
                 ChangeGearVolumeDelay--; if(UseN2O)ChangeGearVolumeDelay-=2;
                 ThrottleUpEffectRateTarget=0.85;
@@ -457,6 +492,7 @@ function Car(iConfig)
                 ThrottleUpEffectRateTarget=0.7;
                 ThrottleUpEffectVolumeTarget=0.3;
             }
+            //踩油門時音量增加
             else
             {
                 ThrottleUpEffectRateTarget=1;
@@ -617,6 +653,14 @@ function Car(iConfig)
             if(CameraShake>10)CameraShake=10;
         }
     };
+
+    this.enableN2O=function(){
+        UseN2O=true;
+    }
+    this.disableN2O=function(){
+        UseN2O=false;
+    }
+
     
     //Get UseN2O State
     this.GetUseN2O=function(){ return UseN2O; };
@@ -684,7 +728,14 @@ function Car(iConfig)
 
     		NowGear--;
     		this.ChangeGear();
-    	}
+            
+            //跟趾
+            if(!ThrottleUp && MainFocusUnit==ThisCar)
+            {
+                HeelandToeTimer=5;
+            }
+        }
+        
     };
 
     //設定檔位
@@ -729,11 +780,22 @@ function Car(iConfig)
     this.RPMDashArrayData='0 '+HUDRPMLength+' 0';
     var LastRPMValue=0,RPMValue=0,RPMMin=0.2,RPMMax=0.85;
     this.MathPRMDashArray=function(){
-        var RPM = NowEngineSpeedPer * (ThrottleUp?1:0.7);
+        var RPM = DisplayEngineSpeedPer * (ThrottleUp?1:0.7);
         RPMValue=RPM*0.2+LastRPMValue*0.8;
         LastRPMValue=RPMValue*1;
+
+        //超轉引擎顫抖
+        if(this.EngineOverRunShake)
+        {
+            RPMValue*=0.8;
+            this.RPMStrokeColor='#FFFF00';
+        }
+        else
+        {
+            this.RPMStrokeColor=(RPMValue>=this.BestGearPer)?'#ff0000':'#ffffff';
+        }
+
         this.RPMDashArrayData='0 '+(HUDRPMLength*(1-(RPMValue*(RPMMax-RPMMin)+RPMMin)))+' '+(HUDRPMLength*(RPMValue*(RPMMax-RPMMin)+RPMMin));
-        this.RPMStrokeColor=(RPMValue>=this.BestGearPer)?'#ff0000':'#ffffff';
 
         return RPMValue;
     };
@@ -886,8 +948,7 @@ function Car(iConfig)
             this.SetGear(NowGear,true);
 
             //隨機是否違規駕駛
-            var Abide=RandF(1);
-            this.AiAbide=(Abide<Config.AiAbidePer);
+            this.AiAbide=(RandF(1)<this.AiAbidePer);
 
             this.Stay=false;
             this.AiHitDelay=60;
@@ -975,6 +1036,7 @@ function Car(iConfig)
     this.AddN2O2=function(Count=0){
 
         if(KeyUseN2O2)return;
+        if(UseN2O)return;
 
         this.NowO2N2+=Count;
         if(this.NowO2N2>this.O2N2Max)
@@ -985,36 +1047,47 @@ function Car(iConfig)
     this.GetEngineSpeedPer=function(){
         return NowEngineSpeedPer;
     };
+    
+    //取得目前引擎轉速百分比
+    this.GetDisplayEngineSpeedPer=function(){
+        return DisplayEngineSpeedPer;
+    };
+
 
     //計算引擎轉速
+    var Ratio;
     this.UpdateEngineSpeedPer=function(){
 
-        NowClutchPer=0;
+        // NowClutchPer=0;
 
         //引擎超轉
         if(this.EngineOverRunning)
         {
             NowEngineSpeedPer=1;
+            DisplayEngineSpeedPer=1;
         }
         //沒有超轉
         else
         {
             //輪胎轉速換算
-            var Ratio = (WheelSpeedMax)*((Config.Gear[NowGear].Reverse)?-1:1) / (Config.Gear[NowGear].TargetSpeed);
+            Ratio = (WheelSpeedMax)*((Config.Gear[NowGear].Reverse)?-1:1) / (Config.Gear[NowGear].TargetSpeed);
 
             //引擎轉速加權
             NowEngineSpeedPer=NowEngineSpeedPer*(NowClutchPer) +Ratio*(1-NowClutchPer);
 
             if(NowEngineSpeedPer>1)NowEngineSpeedPer=1;
             else if(NowEngineSpeedPer<0)NowEngineSpeedPer=0;
+            
+            if(HeelandToe){
+                DisplayEngineSpeedPer=1;
+            }
+            else if(ThrottleUp){
+                DisplayEngineSpeedPer=NowEngineSpeedPer*1;
+            }
+            else {
+                DisplayEngineSpeedPer=DisplayEngineSpeedPer*0.9+(NowEngineSpeedPer*0.9)*0.1;
+            }
         }
-
-        //超轉則震動
-        if(NowEngineSpeedPer>=0.98)
-        {
-            NowEngineSpeedPer-=RandF(0.05);
-        }
-
     };
 
     //重置
@@ -1036,7 +1109,21 @@ function Car(iConfig)
 
 	this.Run=function(){
 
-		Config.OnRunCallBack && Config.OnRunCallBack(ThisCar);
+        Config.OnRunCallBack && Config.OnRunCallBack(ThisCar);
+        
+        //判定跟趾
+        if(MainFocusUnit==ThisCar)
+        {
+            if(HeelandToeTimer>0)
+            {
+                HeelandToeTimer--;
+                HeelandToe=true;
+            }
+            else
+            {
+                HeelandToe=false;
+            }
+        }
         
         //如果車禍超過時間或超過地圖外則放入重置池
         if(Config.CanReset && !this.NeedReset)
@@ -1067,9 +1154,31 @@ function Car(iConfig)
             this.SoundDestroy();
         }
 
+        //超轉引擎顫抖
+        if(MainFocusUnit==ThisCar)
+        {
+            if(EngineOverRunShakeDelay>0)EngineOverRunShakeDelay--;
+            LastEngineOverRunShakeValue=LastEngineOverRunShakeValue*0.9+DisplayEngineSpeedPer*0.1;
+    
+            if(ThrottleUp && LastEngineOverRunShakeValue>0.9 && EngineOverRunShakeDelay==0 && NowGear+1<Config.Gear.length)
+            {
+                EngineOverRunShakeDelay = 5;
+                this.EngineOverRunShake=true;
+            }
+            else
+            {
+                this.EngineOverRunShake=false;
+            }
+        }
+
         //更新音量
-        this.UpdateSound(LastSoundValue*0.9+NowEngineSpeedPer*0.1);
-        LastSoundValue=LastSoundValue*0.9+NowEngineSpeedPer*0.1;
+        this.UpdateSound(
+            // (ThrottleUp)?
+            //     LastSoundValue*0.9+DisplayEngineSpeedPer*0.1 :
+            //     DisplayEngineSpeedPer
+            LastSoundValue*0.9+DisplayEngineSpeedPer*0.1
+        );
+        LastSoundValue=LastSoundValue*0.9+DisplayEngineSpeedPer*0.1;
 
     	if(this.NeedReset)
     		return ;
@@ -1105,35 +1214,41 @@ function Car(iConfig)
         this.UpdateEngineSpeedPer();
 
         //是否使用氮氣
-        KeyUseN2O2=false;
-        UseN2O=false;
-        if(!this.Stay && !this.IsAi && !SystemGameOver && KeyBoardPressArray[38])
+        // UseN2O=false;
+        if(!this.Stay && !this.IsAi && !SystemGameOver){
+            
+            KeyUseN2O2=false;
+            this.disableN2O();
             KeyUseN2O2=CheckKeyBoardPress(UserKeyboardSetting.N2O);
 
-        //消耗氮氣
-        if(KeyUseN2O2)
-        {
-            if(this.NowO2N2>=1*SystemStepPer)
+            //消耗氮氣
+            if(KeyUseN2O2)
             {
-                this.NowO2N2-=1*SystemStepPer;
-                UseN2O=true;
-
-                if(this.NowO2N2<=0)
+                if(this.NowO2N2>=1*SystemStepPer)
                 {
-                    this.NowO2N2=0;
-                    UseN2O=false;
-                }
-            }
-            else 
-                UseN2O=false;
-        }
-        //依據車輛速度補充氮氣
-        else
-        {
-            this.NowO2N2+=(this.Speed.x*this.Speed.x)*0.1;
+                    this.NowO2N2-=1*SystemStepPer;
+                    // UseN2O=true;
+                    this.enableN2O();
 
-            if(this.NowO2N2>this.O2N2Max)
-                this.NowO2N2=this.O2N2Max;
+                    if(this.NowO2N2<=0)
+                    {
+                        this.NowO2N2=0;
+                        // UseN2O=false;
+                        this.disableN2O();
+                    }
+                }
+                else 
+                    // UseN2O=false;
+                    this.disableN2O();
+            }
+            //依據車輛速度補充氮氣
+            else
+            {
+                this.NowO2N2+=(this.Speed.x*this.Speed.x)*0.1;
+
+                if(this.NowO2N2>this.O2N2Max)
+                    this.NowO2N2=this.O2N2Max;
+            }
         }
 
 
@@ -1171,7 +1286,7 @@ function Car(iConfig)
 	    else
 	    {
             //如果引擎低轉速則準備降檔
-            if(NowGear-1>=1 && -this.Speed.x*60*3.6<Config.Gear[NowGear-1].TargetSpeed*0.8)
+            if(NowGear-1>=1 && -this.Speed.x*60*3.6<Config.Gear[NowGear-1].TargetSpeed*0.9)
             {
                 AutoGearDelayTime+=1*SystemStepPer;
 
@@ -1184,9 +1299,9 @@ function Car(iConfig)
                 }
             }
             //如果引擎高轉速則準備進檔
-            else if(NowEngineSpeedPer>this.BestGearPer && !this.OnDrift && !this.OnFly)
+            else if(DisplayEngineSpeedPer>this.BestGearPer && !this.OnDrift && !this.OnFly)
             {
-                AutoGearDelayTime+=1;
+                AutoGearDelayTime+=1.5;
 
                 if(UseN2O)
                     AutoGearDelayTime+=1;
@@ -1259,9 +1374,9 @@ function Car(iConfig)
         //自動離合器
         //if(MainFocusUnit==ThisCar)
         {
-            if(NowEngineSpeedPer<0.5)
+            if(DisplayEngineSpeedPer<0.5)
             {
-                NowClutchPer=1-(NowEngineSpeedPer*2);
+                NowClutchPer=1-(DisplayEngineSpeedPer*2);
             }
             else
             {
@@ -1317,7 +1432,10 @@ function Car(iConfig)
 
                     //扭力轉換
                     if(Value>Config.Gear[NowGear].TorquePer)
+                    {
                         Value=Config.Gear[NowGear].TorquePer;
+                        // Value = (Config.Gear[NowGear].TorquePer*0.5) + (Config.Gear[NowGear].TorquePer*0.5) * (1 - (Value-Config.Gear[NowGear].TorquePer)/(1-Config.Gear[NowGear].TorquePer) );
+                    }
                     else if(Value<0)
                         Value=0;
 
@@ -1706,12 +1824,15 @@ function Car(iConfig)
             var SpeedAdd=this.SpeedLength+0.5;
             if(SpeedAdd>1)SpeedAdd=1;
 
+            var inGrassland = false;
+
             for(var i=0,len=Config.Wheel.length;i<len;i++)
             {
                 //草地
                 if(this.Vehicle.wheelInfos[i].raycastResult.hasHit && Math.abs(this.Vehicle.wheelInfos[i].raycastResult.hitPointWorld.y)<1.25)
                 {
                     FrictionSlipValue=FrictionSlipMax*0.2*SpeedAdd;
+                    inGrassland = true;
                 }
                 //側滑
                 else if(this.Vehicle.wheelInfos[i].raycastResult.hasHit && Math.abs(this.Speed.y)>Config.DriftLimit)
@@ -1727,6 +1848,10 @@ function Car(iConfig)
                 }
 
                 this.Vehicle.wheelInfos[i].frictionSlip=FrictionSlipValue;
+            }
+
+            if(MainFocusUnit==ThisCar && inGrassland){
+                ThisCar.MakeCameraShake(this.SpeedLength);
             }
         }
 
@@ -1770,7 +1895,6 @@ function Car(iConfig)
             if(CameraShakeDelay>0)CameraShakeDelay--;
             if(CameraShakeDelay<=0 && CameraShake>0)
             {
-                CameraShake--;
                 CameraShakeDelay=2;
 
                 var Length=CameraShake*0.25; if(Length>3)Length=3;
@@ -1780,10 +1904,20 @@ function Car(iConfig)
                 Degree=RandF(360);
                 CameraShakeTarget.x=Math.cos(Degree*Math.PI/180)*XYLength;
                 CameraShakeTarget.y=Math.sin(Degree*Math.PI/180)*XYLength;
+                CameraShakeRotateTarget = (RandF(Length*2)-Length)*20;
+
+                CameraShake--; if(CameraShake<0) CameraShake=0;
+            }
+            else{
+                CameraShakeTarget.x=0;
+                CameraShakeTarget.y=0;
+                CameraShakeTarget.z=0;
+                CameraShakeRotateTarget=0;
             }
             CameraShakeOffect.x=CameraShakeOffect.x*0.9+0.1*CameraShakeTarget.x;
             CameraShakeOffect.y=CameraShakeOffect.y*0.9+0.1*CameraShakeTarget.y;
             CameraShakeOffect.z=CameraShakeOffect.z*0.9+0.1*CameraShakeTarget.z;
+            CameraShakeRotate=CameraShakeRotate*0.9+0.1*CameraShakeRotateTarget;
 
             //遊戲結束
             if(ViewType==2 || SystemGameOver)
@@ -1852,6 +1986,7 @@ function Car(iConfig)
                     this.Camera.position.z+=CameraShakeOffect.z;
 
                     this.CameraRotateGruop.rotation.y=CameraDefaultRotation*Math.PI/180;
+                    this.CameraRotateGruop.rotation.z=CameraShakeRotate*Math.PI/180;
                 }
             }
             //車內第一人稱視野
@@ -1906,6 +2041,8 @@ function Car(iConfig)
                     this.Camera.position.z=(this.Camera.position.z*FOVSpeedAdd.z) + (1-FOVSpeedAdd.z)*(Config.CameraOptions.FOV.Position.z + (-this.Speed.x*Config.CameraOptions.FOV.SpeedPer.z));
                     
                     this.Camera.rotation.y=0*Math.PI/180;
+                    this.CameraRotateGruop.rotation.y=0;
+                    this.CameraRotateGruop.rotation.z=CameraShakeRotate*Math.PI/180;
                 }
             }
         }
@@ -1983,6 +2120,7 @@ function Car(iConfig)
     this.AiNoMoveTime=0;                //車輛停止移動的時間
     this.AiPassPackageIndexArray=[];    //略過預警的Package物件
     this.AiTargetSpeed=Config.AiTargetSpeed;    //目標車速
+    this.AiBrightBehaviorTimer=0;       //對遠光燈反應的時間
 
     var AiTurnPerPID=new PID({          //轉向PID
         P:0.05*5/2,
@@ -2073,6 +2211,19 @@ function Car(iConfig)
             }
         } 
 
+        //對遠光燈做出反應
+        this.AiBrightBehaviorTimer--;
+        if(
+            this.AiBrightBehaviorTimer<=0 && 
+            CheckKeyBoardPress(UserKeyboardSetting.Bright) && 
+            Math.abs(MainFocusUnit.Body.position.y-this.Body.position.y)<3 &&
+            Math.abs(this.Body.position.x)<50
+        ){
+            this.AiChangeLaneTime=this.AiChangeLaneTimeMax*1;
+            this.ChangeLane();
+            this.AiBrightBehaviorTimer = 60*5;
+        }
+
         //如果時速小於20公里太久則判定重置
         if(!this.NeedReset && !this.AiHasCrack && this.Speed.length()*60*3.6<20)
         {
@@ -2112,7 +2263,7 @@ function Car(iConfig)
         //SpeedValue += Math.abs(1-TurnPIDValue);
 
         //速度差
-        SpeedValue += ((this.AiTargetSpeed * ((!this.AiAbide)?1:1.1)) - (-this.Speed.x*60*3.6)) * 0.01;
+        SpeedValue += ((this.AiTargetSpeed * ((!this.AiAbide)?1:this.AiAbideSpeedPer)) - (-this.Speed.x*60*3.6)) * 0.01;
 
         if(SpeedValue>0 && !this.AiHasCrack)
         {

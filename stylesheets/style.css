@@ -611,12 +611,14 @@ h5
 
 #score-check .score-type
 {
+    display: flex;
+    justify-content: center;
     margin-bottom: 30px;
 }
 #score-check .score-type .item
 {
     display: inline-block;
-    width: 20%;
+    flex-basis: 20%;
 }
 #score-check .score-type .item h5
 {
@@ -624,12 +626,14 @@ h5
 }
 #score-check .camera-score
 {
+    display: flex;
+    justify-content: center;
 	margin-bottom: 30px;
 }
 #score-check .camera-score .item
 {
 	display: inline-block;
-    width: 15%;
+    flex-basis: 15%;
 }
 #score-check .camera-score .item h5
 {

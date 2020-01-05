@@ -19,7 +19,7 @@
     "Fly":"飞行",
     "Road Safety Camera":"测速照相",
     "Total":"总分",
-    "Car accident":"车祸",
+    "Car accident":"破坏",
     "Speed bonus":"速度奖励",
     "m":"公尺",
     "M":"公尺",
