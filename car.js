@@ -60,7 +60,8 @@ function Car(iConfig)
             suspensionStiffness: 30,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
-            frictionSlip: 3*0.9*0.7*0.7*1.8/**1.5*/,
+            frictionSlip: 1.323*1.8,
+            frictionSideSlip: 1.323*1.8*4,
             dampingRelaxation: 2.3/3*1.5,
             dampingCompression: 4.4/3*1.5,
             maxSuspensionForce: 100000,
@@ -226,7 +227,7 @@ function Car(iConfig)
     this.ResetCount=0;              //重製次數
 
     var AutoGearDelayTime=0;
-    var AutoGearDelayTimeMax=60;	//自動換檔延遲時間
+    var AutoGearDelayTimeMax=30;	//自動換檔延遲時間
     var KeyNextGear=false;          //玩家按下進檔
     var HadKeyNextGear=false;      //玩家曾經按下進檔
     var KeyPervGear=false;          //玩家按下退檔
@@ -694,8 +695,9 @@ function Car(iConfig)
         if(NowGear==Config.Gear.length-1)
             this.BestGearPer=1;
 
-        if(NowGear-1>=1)
-            this.BestPervGearPer=1-(Config.Gear[NowGear-1].TorquePer);
+        if(NowGear-1>=1){
+            this.BestPervGearPer = 0.8 * (Config.Gear[NowGear-1].TargetSpeed / Config.Gear[NowGear].TargetSpeed);
+        }
 
         this.MathGearDashArray();
 
@@ -1160,7 +1162,13 @@ function Car(iConfig)
             if(EngineOverRunShakeDelay>0)EngineOverRunShakeDelay--;
             LastEngineOverRunShakeValue=LastEngineOverRunShakeValue*0.9+DisplayEngineSpeedPer*0.1;
     
-            if(ThrottleUp && LastEngineOverRunShakeValue>0.9 && EngineOverRunShakeDelay==0 && NowGear+1<Config.Gear.length)
+            if(
+                ThrottleUp && 
+                LastEngineOverRunShakeValue>0.9 && 
+                LastEngineOverRunShakeValue>(1-Config.Gear[NowGear].TorquePer) && 
+                EngineOverRunShakeDelay==0 && 
+                NowGear+1<Config.Gear.length
+            )
             {
                 EngineOverRunShakeDelay = 5;
                 this.EngineOverRunShake=true;
@@ -1285,10 +1293,40 @@ function Car(iConfig)
     	//自排
 	    else
 	    {
-            //如果引擎低轉速則準備降檔
-            if(NowGear-1>=1 && -this.Speed.x*60*3.6<Config.Gear[NowGear-1].TargetSpeed*0.9)
+            //自動變成倒退檔
+            if(ThisCar == MainFocusUnit)
             {
-                AutoGearDelayTime+=1*SystemStepPer;
+                if(
+                    NowGear == 0 &&
+                    CheckKeyBoardPress(UserKeyboardSetting.Throttle)
+                )
+                {
+                    this.SetGear(1);
+                    this.UpdateEngineSpeedPer();
+
+                }
+                else if(
+                    NowGear > 0 && 
+                    -this.Speed.x*60*3.6 < 5 && 
+                    CheckKeyBoardPress(UserKeyboardSetting.Brake) && 
+                    !CheckKeyBoardPress(UserKeyboardSetting.Throttle)
+                )
+                {
+                    this.SetGear(0);
+                    this.UpdateEngineSpeedPer();
+                }
+            }
+
+            //如果引擎低轉速則準備降檔
+            if(
+                NowGear-1>=1 && 
+                !this.OnDrift && 
+                !this.OnFly && 
+                DisplayEngineSpeedPer < this.BestPervGearPer && 
+                -this.Speed.x*60*3.6 < Config.Gear[NowGear-1].TargetSpeed*0.7
+            )
+            {
+                AutoGearDelayTime+=10*SystemStepPer;
 
                 //降檔
                 if(AutoGearDelayTime>AutoGearDelayTimeMax)
@@ -1299,7 +1337,13 @@ function Car(iConfig)
                 }
             }
             //如果引擎高轉速則準備進檔
-            else if(DisplayEngineSpeedPer>this.BestGearPer && !this.OnDrift && !this.OnFly)
+            else if(
+                !this.OnDrift && 
+                !this.OnFly && 
+                ThrottleUp &&
+                DisplayEngineSpeedPer>this.BestGearPer && 
+                -this.Speed.x*60*3.6 > Config.Gear[NowGear].TargetSpeed*0.7
+            )
             {
                 AutoGearDelayTime+=1.5;
 
@@ -1360,15 +1404,40 @@ function Car(iConfig)
         //玩家加速
 		if(!this.IsAi && !InGarage && !SystemGameOver)
         {
-            if(KeyBoardPressArray[38])
+            if(Config.AutoGear)
             {
-                this.SpeedUp();
+                //倒退檔
+                if(NowGear == 0){
+                    if(CheckKeyBoardPress(UserKeyboardSetting.Brake)){
+                        this.SpeedUp();
+                    }
+                    else{
+                        this.SpeedDown();
+                    }
+                }
+
+                else{
+                    if(CheckKeyBoardPress(UserKeyboardSetting.Throttle))
+                    {
+                        this.SpeedUp();
+                    }
+                    else
+                    {
+                        this.SpeedDown();
+                    }
+                }
             }
             else
             {
-                this.SpeedDown();
+                if(CheckKeyBoardPress(UserKeyboardSetting.Throttle))
+                {
+                    this.SpeedUp();
+                }
+                else
+                {
+                    this.SpeedDown();
+                }
             }
-	        	
 	    }
 
         //自動離合器
@@ -1469,14 +1538,47 @@ function Car(iConfig)
         //玩家控制煞車或倒車
         if(!this.Stay && !this.IsAi && !SystemGameOver)
         {
-        	if(KeyBoardPressArray[40] || CheckKeyBoardPress(UserKeyboardSetting.Brake))
-			{
-				this.TakeBrake();
-			}
-			else
-			{
-                this.UnTakeBrake();
-			}
+            if(Config.AutoGear){
+
+                if(NowGear == 0){
+                    if(CheckKeyBoardPress(UserKeyboardSetting.Throttle))
+                    {
+                        this.TakeBrake();
+                    }
+                    else
+                    {
+                        this.UnTakeBrake();
+                    }
+                }
+                else{
+                    if(
+                        this.Speed.x*60*3.6 > 5 &&
+                        CheckKeyBoardPress(UserKeyboardSetting.Throttle)
+                    )
+                    {
+                        this.TakeBrake();
+                    }
+                    else if(CheckKeyBoardPress(UserKeyboardSetting.Brake))
+                    {
+                        this.TakeBrake();
+                    }
+                    else
+                    {
+                        this.UnTakeBrake();
+                    }
+                }
+
+            }
+            else{
+                if(CheckKeyBoardPress(UserKeyboardSetting.Brake))
+                {
+                    this.TakeBrake();
+                }
+                else
+                {
+                    this.UnTakeBrake();
+                }
+            }
         }
         else if(this.Stay)
         {
@@ -1508,11 +1610,11 @@ function Car(iConfig)
         //玩家控制轉彎
         if(!this.Stay && !this.IsAi && !SystemGameOver)
 		{
-			if(KeyBoardPressArray[39])
+			if(CheckKeyBoardPress(UserKeyboardSetting.TurnRight))
 	        {
 	        	this.TurnRight();
 	        }
-	        else if(KeyBoardPressArray[37])
+	        else if(CheckKeyBoardPress(UserKeyboardSetting.TurnLeft))
 	        {
 	        	this.TurnLeft();
 	        }
@@ -1824,6 +1926,15 @@ function Car(iConfig)
             var SpeedAdd=this.SpeedLength+0.5;
             if(SpeedAdd>1)SpeedAdd=1;
 
+            //側滑摩擦
+            var sideslipPer = 0;
+            if(this.SpeedLength != 0){
+                sideslipPer = Math.abs(this.Speed.y / this.SpeedLength);
+                if(sideslipPer>1)sideslipPer=1;
+            }
+            sideslipPer *= sideslipPer;
+            sideslipPer *= sideslipPer;
+
             var inGrassland = false;
 
             for(var i=0,len=Config.Wheel.length;i<len;i++)
@@ -1847,6 +1958,9 @@ function Car(iConfig)
                     FrictionSlipValue=FrictionSlipMax*SpeedAdd;
                 }
 
+                //側滑增加摩擦力
+                FrictionSlipValue += Config.WheelOptions.frictionSideSlip*sideslipPer;
+                
                 this.Vehicle.wheelInfos[i].frictionSlip=FrictionSlipValue;
             }
 

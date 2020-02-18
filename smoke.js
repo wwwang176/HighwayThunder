@@ -114,16 +114,16 @@ function Spark(iConfig)
                 EachPointMoveVector[i].z*=-1;
                 EachPointMoveVector[i].w=0;
             }
-            else if(Geometry.attributes.position.array[i*3+1]+this.Position.y>14)
-            {
-                Geometry.attributes.position.array[i*3+1]=14-this.Position.y;
-                EachPointMoveVector[i].y*=-1;
-            }
-            else if(Geometry.attributes.position.array[i*3+1]+this.Position.y<-14)
-            {
-                Geometry.attributes.position.array[i*3+1]=-14-this.Position.y;
-                EachPointMoveVector[i].y*=-1;
-            }
+            // else if(Geometry.attributes.position.array[i*3+1]+this.Position.y>14)
+            // {
+            //     Geometry.attributes.position.array[i*3+1]=14-this.Position.y;
+            //     EachPointMoveVector[i].y*=-1;
+            // }
+            // else if(Geometry.attributes.position.array[i*3+1]+this.Position.y<-14)
+            // {
+            //     Geometry.attributes.position.array[i*3+1]=-14-this.Position.y;
+            //     EachPointMoveVector[i].y*=-1;
+            // }
 
             EachPointMoveVector[i].x-=(EachPointMoveVector[i].x*0.02*SystemStepPer);
             EachPointMoveVector[i].y-=(EachPointMoveVector[i].y*0.02*SystemStepPer);

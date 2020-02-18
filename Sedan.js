@@ -11,6 +11,7 @@ function Sedan(iConfig)
         EngineForce:26000,              //引擎力量
         BrakeForce:250,                 //煞車力量
         O2N2Max:60*5,					//氮氣最大量
+        AutoGear:false,					//是否是自排
         Gear:[							//齒輪設定
             {
                 Reverse:true,   //倒退檔

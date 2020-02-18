@@ -186,30 +186,6 @@
 			}
 		},
 		{
-			"uuid": "93DF53CB-508D-4F96-AB1E-F3483B98B5C0",
-			"type": "BufferGeometry",
-			"data": {
-				"attributes": {
-					"position": {
-						"itemSize": 3,
-						"type": "Float32Array",
-						"array": [41.030361,2.633021,0,41.030361,2.633021,0.393701],
-						"normalized": false
-					}
-				},
-				"groups": [
-					{
-						"start": 0,
-						"count": 2,
-						"materialIndex": 0
-					}],
-				"boundingSphere": {
-					"center": [41.030361,2.633021,0.19685],
-					"radius": 0.19685
-				}
-			}
-		},
-		{
 			"uuid": "6CF629BE-C373-469C-BE3C-E43DE545B153",
 			"type": "BufferGeometry",
 			"data": {
@@ -630,30 +606,6 @@
 			}
 		},
 		{
-			"uuid": "EEF9079D-97D0-480D-88CC-BCF410299271",
-			"type": "BufferGeometry",
-			"data": {
-				"attributes": {
-					"position": {
-						"itemSize": 3,
-						"type": "Float32Array",
-						"array": [146.226898,9.400744,7.682724,145.484299,7.439076,20.158621,146.226898,9.400744,7.682724,147.391403,8.837585,3.730039],
-						"normalized": false
-					}
-				},
-				"groups": [
-					{
-						"start": 0,
-						"count": 4,
-						"materialIndex": 0
-					}],
-				"boundingSphere": {
-					"center": [146.437851,8.41991,11.94433],
-					"radius": 8.327417
-				}
-			}
-		},
-		{
 			"uuid": "E95243F0-E3A6-47F3-85DD-2AA1CBCBFCB4",
 			"type": "BufferGeometry",
 			"data": {
@@ -710,30 +662,6 @@
 				"boundingSphere": {
 					"center": [2.42126,1.387511,2.755906],
 					"radius": 2.176599
-				}
-			}
-		},
-		{
-			"uuid": "ADD7FC70-74A0-47AC-ACC9-696AF373693C",
-			"type": "BufferGeometry",
-			"data": {
-				"attributes": {
-					"position": {
-						"itemSize": 3,
-						"type": "Float32Array",
-						"array": [4.409449,0,0,4.409449,2.755906,0],
-						"normalized": false
-					}
-				},
-				"groups": [
-					{
-						"start": 0,
-						"count": 2,
-						"materialIndex": 0
-					}],
-				"boundingSphere": {
-					"center": [4.409449,1.377953,0],
-					"radius": 1.377953
 				}
 			}
 		},
@@ -836,7 +764,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "58DE5311-4483-45AC-AEF3-006A5068CDEE",
@@ -846,7 +781,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "9FD7EC54-A670-4AE9-8CC0-9F9BFE63088D",
@@ -856,16 +798,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
-		},
-		{
-			"uuid": "87C1C3D2-045F-42DD-AD34-73A65BA61828",
-			"type": "MeshBasicMaterial",
-			"name": "edge_color000255",
-			"color": 16777215,
-			"depthFunc": 3,
-			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "9CB13B40-3332-4971-BEDE-4D6ECFDDC5F7",
@@ -875,7 +815,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "D5EA83F2-4D75-4BA3-84B5-9FB3BDD3CCCE",
@@ -885,7 +832,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "D4E30897-428B-47F8-BE03-F2F0FF029E88",
@@ -895,7 +849,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "A465A7AA-4729-4781-8BE5-3DED4AC575C9",
@@ -905,7 +866,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "377D49B8-972F-44BD-8EFF-2282E71963CB",
@@ -915,7 +883,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "B8851995-F680-4425-82B5-BB1161A7A684",
@@ -925,7 +900,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "DA8FBC78-97B2-4CB7-AC8D-77198BB6AAE8",
@@ -935,7 +917,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "95A12F3B-0643-4850-8FDD-0AAC957CFBB7",
@@ -945,16 +934,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
-		},
-		{
-			"uuid": "CF26FA73-47BC-49E0-A5FA-CEC077CDEF9C",
-			"type": "MeshBasicMaterial",
-			"name": "edge_color226226226255",
-			"color": 16777215,
-			"depthFunc": 3,
-			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "1BE8CC51-44CD-436F-AE7C-D629931F748F",
@@ -966,7 +953,14 @@
 			"transparent": true,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		}],
 	"object": {
 		"uuid": "77E98F0A-DD62-4C65-9BAC-9461B6EC125F",
@@ -1055,14 +1049,6 @@
 								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
 								"geometry": "51AF1641-6C18-47DF-935A-22F4BB656CF5",
 								"material": "A6FCFC6F-DB47-4096-B6FF-FE2257312B1F"
-							},
-							{
-								"uuid": "4CBA94B2-2CA4-4855-9AF4-00ABC7C02F02",
-								"type": "LineSegments",
-								"layers": 1,
-								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-								"geometry": "93DF53CB-508D-4F96-AB1E-F3483B98B5C0",
-								"material": "87C1C3D2-045F-42DD-AD34-73A65BA61828"
 							}]
 					},
 					{
@@ -1202,14 +1188,6 @@
 								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
 								"geometry": "899EDF12-0FE2-49A3-9EE4-BAB1BF93C7DB",
 								"material": "DA8FBC78-97B2-4CB7-AC8D-77198BB6AAE8"
-							},
-							{
-								"uuid": "2E046396-6A85-4F43-83F4-7D973C43164A",
-								"type": "LineSegments",
-								"layers": 1,
-								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-								"geometry": "EEF9079D-97D0-480D-88CC-BCF410299271",
-								"material": "87C1C3D2-045F-42DD-AD34-73A65BA61828"
 							}]
 					},
 					{
@@ -1234,14 +1212,6 @@
 								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
 								"geometry": "62E775A4-8B0A-4F55-A23D-6640E5235AE6",
 								"material": "58DE5311-4483-45AC-AEF3-006A5068CDEE"
-							},
-							{
-								"uuid": "9DF0A270-0F81-4016-BBB2-37780554426C",
-								"type": "LineSegments",
-								"layers": 1,
-								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-								"geometry": "ADD7FC70-74A0-47AC-ACC9-696AF373693C",
-								"material": "CF26FA73-47BC-49E0-A5FA-CEC077CDEF9C"
 							}]
 					},
 					{

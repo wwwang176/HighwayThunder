@@ -96,30 +96,6 @@
 			}
 		},
 		{
-			"uuid": "E602204B-0348-405D-8EFB-9D89ABA505FE",
-			"type": "BufferGeometry",
-			"data": {
-				"attributes": {
-					"position": {
-						"itemSize": 3,
-						"type": "Float32Array",
-						"array": [0,0,0,2.815071,0,0],
-						"normalized": false
-					}
-				},
-				"groups": [
-					{
-						"start": 0,
-						"count": 2,
-						"materialIndex": 0
-					}],
-				"boundingSphere": {
-					"center": [1.407536,0,0],
-					"radius": 1.407536
-				}
-			}
-		},
-		{
 			"uuid": "86856B4A-0DE5-4D4B-BC12-C05EB2F556ED",
 			"type": "BufferGeometry",
 			"data": {
@@ -158,7 +134,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "12B79383-B61F-4489-A436-529C99A54F26",
@@ -168,16 +151,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
-		},
-		{
-			"uuid": "48333D61-FEFF-4E3B-85B9-AE9C5DD9D5B2",
-			"type": "MeshBasicMaterial",
-			"name": "edge_color000255",
-			"color": 16777215,
-			"depthFunc": 3,
-			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		},
 		{
 			"uuid": "7864F6D0-EE94-44A6-A181-EE855C5660AA",
@@ -187,7 +168,14 @@
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
-			"depthWrite": true
+			"depthWrite": true,
+			"stencilWrite": false,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
 		}],
 	"object": {
 		"uuid": "848D8AE5-015A-49F9-BE9B-C554D3806D8C",
@@ -247,14 +235,6 @@
 								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
 								"geometry": "4F20229E-161E-4300-A98A-652946DC3FF0",
 								"material": "2116575F-E733-430A-B831-34183B6A8D26"
-							},
-							{
-								"uuid": "2F7E79BD-FCDB-49F0-995A-556120985CA2",
-								"type": "LineSegments",
-								"layers": 1,
-								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-								"geometry": "E602204B-0348-405D-8EFB-9D89ABA505FE",
-								"material": "48333D61-FEFF-4E3B-85B9-AE9C5DD9D5B2"
 							}]
 					},
 					{

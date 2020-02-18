@@ -12,6 +12,7 @@ function Bus(iConfig)
         BrakeForce:/*150*/800,			//煞車速度
         AiTargetLaneYOffsetMax:0.5,
         AiResetZOffset:1,
+        AutoGear:false,					//是否是自排
 		Gear:[	
             {
 				Reverse:true,   //倒退檔
@@ -55,7 +56,8 @@ function Bus(iConfig)
             suspensionStiffness: 30,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
-            frictionSlip: 3*0.9*0.7*0.7*2,
+            frictionSlip: 1.323*2,
+            frictionSideSlip: 1.323*2*1,
             dampingRelaxation: 2.3/2,
             dampingCompression: 4.4/2,
             maxSuspensionForce: 100000,
@@ -70,7 +72,7 @@ function Bus(iConfig)
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-3.43,-2.495/2+0.2,-0.95),
+                Position:new THREE.Vector3(-3.43,-2.495/2+0.2,-0.85),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -79,7 +81,7 @@ function Bus(iConfig)
             {
                 Power:false,
                 Steer:true,
-                Position:new THREE.Vector3(-3.43,2.495/2-0.2,-0.95),
+                Position:new THREE.Vector3(-3.43,2.495/2-0.2,-0.85),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -88,7 +90,7 @@ function Bus(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(2.73,-2.495/2+0.2,-0.95),
+                Position:new THREE.Vector3(2.73,-2.495/2+0.2,-0.85),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,
@@ -97,7 +99,7 @@ function Bus(iConfig)
             {
                 Power:true,
                 Steer:false,
-                Position:new THREE.Vector3(2.73,2.495/2-0.2,-0.95),
+                Position:new THREE.Vector3(2.73,2.495/2-0.2,-0.85),
                 suspensionRestLength:0.4,
                 maxSuspensionTravel:0.4,
                 TyreBurnoutTime:0,

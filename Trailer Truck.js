@@ -14,6 +14,7 @@ function TrailerTruck(iConfig)
         BrakeForce:1000,			    //煞車速度
         SteerAdd:22.5/14*2,               //轉向速度
         SteerAddLinear:0.5,             //轉向線性化
+        AutoGear:false,					//是否是自排
         Gear:[							//齒輪設定
             {
 				Reverse:true,   //倒退檔
@@ -87,7 +88,8 @@ function TrailerTruck(iConfig)
             suspensionStiffness: 40,
             //suspensionRestLength: 0.5,
             suspensionRestLength: 0.0,
-            frictionSlip: 3*0.9*0.7*0.7*2,
+            frictionSlip: 1.323*2,
+            frictionSideSlip: 1.323*2*4,
             dampingRelaxation: 2.3,
             dampingCompression: 4.4,
             maxSuspensionForce: 100000,

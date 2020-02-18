@@ -824,7 +824,6 @@ function initCannon(){
     world.addContactMaterial(WallCarBodyContactMaterial);
 
     //車體與角錐
-    //車體與牆壁
     var TrafficConeCarBodyContactMaterial = new CANNON.ContactMaterial(CarBodyMaterial, 
                                                                         TrafficConeMaterial, 
                                                                         {
@@ -1115,21 +1114,21 @@ function LoadResource(CallBack)
 
     //SUV Sound
     var SoundLoader1 = new THREE.AudioLoader(LoadingManager).load(
-        'sound/SUV/unload.wav',
+        'sound/suv/unload.wav',
         function(audioBuffer)
         {
             SUVSoundBuffer[0]=audioBuffer;
         }
     );
     var SoundLoader2 = new THREE.AudioLoader(LoadingManager).load(
-        'sound/SUV/50_final.wav',
+        'sound/suv/50_final.wav',
         function(audioBuffer)
         {
             SUVSoundBuffer[1]=audioBuffer;
         }
     );
     var SoundLoader3 = new THREE.AudioLoader(LoadingManager).load(
-        'sound/SUV/100_final.wav',
+        'sound/suv/100_final.wav',
         function(audioBuffer)
         {
             SUVSoundBuffer[2]=audioBuffer;
@@ -1935,7 +1934,7 @@ function AnimateGarage()
     GarageRenderer.render(GarageScene, GarageMainCamera);
 
     //玩家按下左右選單
-    if(!KeyBoardPressArray[39] && !KeyBoardPressArray[37])
+    if(!CheckKeyBoardPress(UserKeyboardSetting.TurnLeft) && !CheckKeyBoardPress(UserKeyboardSetting.TurnRight))
     {
         GarageKeyNextPervDelay=0;
     }
@@ -1945,12 +1944,12 @@ function AnimateGarage()
     }
     else
     {
-        if(KeyBoardPressArray[39])
+        if(CheckKeyBoardPress(UserKeyboardSetting.TurnRight))
         {
             GaragePervCar();
             GarageKeyNextPervDelay=20;
         }
-        else if(KeyBoardPressArray[37])
+        else if(CheckKeyBoardPress(UserKeyboardSetting.TurnLeft))
         {
             GarageNextCar();
             GarageKeyNextPervDelay=20;
@@ -1958,7 +1957,7 @@ function AnimateGarage()
     }
 
     //玩家按下Enter
-    if(KeyBoardPressArray[13])
+    if(CheckKeyBoardPress(UserKeyboardSetting.Enter))
     {
         SelectGarageCar();
     }
@@ -2780,7 +2779,12 @@ function UpdateSystemObjectCount()
 {
 
     var Str='';
-    Str+= 'Render triangles: '+Renderer.info.render.triangles+'<br>';
+    if(InGarage){
+        Str+= 'Render vertices: '+GarageRenderer.info.render.vertices+'<br>';
+    }
+    else{
+        Str+= 'Render vertices: '+Renderer.info.render.vertices+'<br>';
+    }
     Str+= 'SystemRenderTime: '+SystemRenderTime+'<br>';
     Str+= 'SystemRunTime: '+SystemRunTime+'<br>';
     Str+= 'SystemAiTime: '+SystemAiTime+'<br>';
